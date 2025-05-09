@@ -3,11 +3,13 @@ import Profile from "./pages/Profile";
 import Signin from "./pages/Signin";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
+import Header from "./Componets/Header";
 import { BrowserRouter as Router,Route,Routes } from "react-router-dom";
 function App() {
   return (
     <>
       <Router>
+        <Header/>
         <Routes>
         <Route path="/" element={<Home/>}/>
         <Route path="/profile" element={<Profile/>}/>
