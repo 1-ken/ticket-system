@@ -1,7 +1,6 @@
-import React from 'react'
-import { useLocation,useNavigate } from 'react-router-dom'
-import logo from './logo.svg'
-
+import React from "react";
+import logo from "./logo.svg";
+import { useLocation, useNavigate } from "react-router-dom";
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,56 +10,53 @@ export default function Navbar() {
     }
   }
   return (
-    <div>
-      <div className="bg-[#ffffff] border-b shadow-sm sticky top-0 z-40">
+    <div className="bg-[#FF0000] border-b shadow-sm sticky top-0 z-40">
       <header className="flex justify-between items-center px-3 max-w-6xl mx-auto">
         <div>
           <img
             onClick={() => navigate("/")}
             src={logo}
             alt="logo"
-            className="h-9 sm:h-11 md:h-15 lg:h-19 xl:h-24 2xl:h-27 cursor-pointer rounded-full"
+            className="h-10 sm:h-12 md:h-16 lg:h-20 xl:h-24 2xl:h-28 cursor-pointer rounded-full"
           />
         </div>
         <div>
           <ul className="flex space-x-4 sm:space-x-6 md:space-x-8 lg:space-x-10 xl:space-x-12 2xl:space-x-14">
             <li
               onClick={() => navigate("/")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#080808] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/") && "text-black border-b-black"
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#FFD700] border-b-[3px] border-b-transparent ${
+                pathMatchRoute("/") && "text-black border-b-white"
               }`}
             >
-              Dashboard
+              Home
             </li>
             <li
-              onClick={() => navigate("/tickets")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#080808] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/tickets") && "text-black border-b-black"
+              onClick={() => navigate("/about-us")}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#FFD700] border-b-[3px] border-b-transparent ${
+                pathMatchRoute("/about-us") && "text-black border-b-white"
               }`}
             >
-              Tickets
-            </li>
-            
-            <li
-              onClick={() => navigate("/notifications")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#080808] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/notifications") && "text-black border-b-black"
-              }`}
-            >
-              notification
+              About us
             </li>
             <li
-              onClick={() => navigate("/profile")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#080808] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/profile") && "text-black border-b-black"
+              onClick={() => navigate("/programs")}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#FFD700] border-b-[3px] border-b-transparent ${
+                pathMatchRoute("/programs") && "text-black border-b-white"
               }`}
             >
-              profile
+              Programs
+            </li>
+            <li
+              onClick={() => navigate("/donate")}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#FFD700] border-b-[3px] border-b-transparent ${
+                pathMatchRoute("/donate") && "text-black border-b-white"
+              }`}
+            >
+              Donate
             </li>
           </ul>
         </div>
       </header>
-      </div>
     </div>
-  )
+  );
 }
