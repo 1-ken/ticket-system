@@ -28,15 +28,15 @@ export default function Navbar() {
                 pathMatchRoute("/") && "text-black border-b-black"
               }`}
             >
-              Home
+              Dashboard
             </li>
             <li
-              onClick={() => navigate("/about-us")}
+              onClick={() => navigate("/tickets")}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/about-us") && "text-black border-b-black"
+                pathMatchRoute("/tickets") && "text-black border-b-black"
               }`}
             >
-              About us
+              Tickets
             </li>
             <li
               onClick={() => navigate("/programs")}
@@ -44,15 +44,23 @@ export default function Navbar() {
                 pathMatchRoute("/programs") && "text-black border-b-black"
               }`}
             >
-              Programs
+              Knowledge Base
             </li>
             <li
-              onClick={() => navigate("/donate")}
+              onClick={() => navigate("/notifications")}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/donate") && "text-black border-b-black"
+                pathMatchRoute("/notifications") && "text-black border-b-black"
               }`}
             >
-              Donate
+              Notifications
+            </li>
+            <li
+              onClick={() => navigate("/sign-in")}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
+                pathMatchRoute("/sign-in") && "text-black border-b-black"
+              }`}
+            >
+              Sign In
             </li>
           </ul>
         </div>

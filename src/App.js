@@ -5,6 +5,9 @@ import Profile from "./Pages/Profile";
 import Notifications from "./Pages/Notifications";
 import Tickets from "./Pages/Tickets";
 import { ToastContainer } from "react-toastify";
+import SignIn from "./Pages/SignIn";
+import SignUp from "./Pages/SignUp";
+import ForgotPassword from "./Pages/ForgotPassword";
 
 function App() {
   return (
@@ -16,6 +19,12 @@ function App() {
           <Route path="/profile" element={<Profile/>}/>        
           <Route path="/notifications" element={<Notifications/>}/>
           <Route path="/tickets" element = {<Tickets/>}/>
+          <Route path="/tickets" element = {<Tickets/>}/>
+          <Route path="/sign-in" element = {<SignIn/>}/>
+          <Route path="/sign-up" element = {<SignUp/>}/>
+          <Route path="/forgot-password-up" element = {<ForgotPassword/>}/>
+
+
         </Routes>
       </Router>
       <ToastContainer
