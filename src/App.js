@@ -22,7 +22,7 @@ function App() {
           <Route path="/tickets" element = {<Tickets/>}/>
           <Route path="/sign-in" element = {<SignIn/>}/>
           <Route path="/sign-up" element = {<SignUp/>}/>
-          <Route path="/forgot-password-up" element = {<ForgotPassword/>}/>
+          <Route path="/forgot-password" element = {<ForgotPassword/>}/>
 
 
         </Routes>
