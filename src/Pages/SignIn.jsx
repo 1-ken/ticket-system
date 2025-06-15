@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { AiFillEyeInvisible, AiFillEye } from "react-icons/ai";
 import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../Components/OAuth";
-import { signInWithEmailAndPassword,getAuth } from "firebase/auth";
-import {toast} from "react-toastify";
+import { signInWithEmailAndPassword, getAuth } from "firebase/auth";
+import { toast } from "react-toastify";
 
 export default function Signin() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,20 +19,20 @@ export default function Signin() {
     password: "",
   });
   const { email, password } = formData;
-async function onSubmit(e) {
-  e.preventDefault();
-  try {
-    const auth = getAuth();
-    const userCredentials = await signInWithEmailAndPassword(auth, email, password);
-    if(userCredentials.user){
-      navigate("/");
+  async function onSubmit(e) {
+    e.preventDefault();
+    try {
+      const auth = getAuth();
+      const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+      if (userCredentials.user) {
+        navigate("/");
+      }
+    } catch (error) {
+      toast.error("wrong user credentials");
+      console.log(error);
     }
-  } catch (error) {
-    toast.error("wrong user credentials");
-    console.log(error);
-  }
 
-}
+  }
   return (
     <section>
       <h1 className="text-3xl text-center mt-6 font-bold">Sign In</h1>
@@ -47,7 +47,7 @@ async function onSubmit(e) {
         <div className="w-full md:w-[67%] lg:w-[40%] lg:ml-5">
           <form onSubmit={onSubmit}>
             <input
-              className="mb-6  w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"
+              className="mb-6 border-2 rounded-lg w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 transition ease-in-out"
               id="email"
               placeholder="Email address"
               type="email"
@@ -56,7 +56,7 @@ async function onSubmit(e) {
             />
             <div className="relative mb-6 ">
               <input
-                className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300  rounded transition ease-in-out"
+                className="w-full border-2 rounded-lg px-4 py-2 text-xl text-gray-700 bg-white border-gray-300  rounded transition ease-in-out"
                 id="password"
                 placeholder="password"
                 type={showPassword ? "text" : "password"}
@@ -103,7 +103,7 @@ async function onSubmit(e) {
             <div className="flex items-center my-4 before:border-t before:flex-1 before:border-gray-300 after:border-t after:flex-1 after:border-gray-300 mx-4">
               <p className="center font-semibold mx-4">OR</p>
             </div>
-            <OAuth/>
+            <OAuth />
           </form>
         </div>
       </div>

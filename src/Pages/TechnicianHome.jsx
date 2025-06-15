@@ -3,7 +3,7 @@ import React from 'react'
 export default function TechnicianHome() {
   return (
     <div>
-      TechnicianHome
+      Technician Home
     </div>
   )
 }

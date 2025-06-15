@@ -9,45 +9,45 @@ import {
 } from "firebase/firestore";
 function Profile() {
   const auth = getAuth();
-    const navigate = useNavigate();
-    const [FormData, setFormData] = useState({
-      name: auth.currentUser.displayName,
-      email: auth.currentUser.email,
-    });
-    const { name, email } = FormData;
-    console.log(FormData)
-    function onLogout() {
-      auth.signOut();
-      navigate("/");
-    }
-  
-    const [changeDetail, setChangeDetail] = useState(false);
-  
-    function onChange(e) {
-      setFormData((prevState) => ({
-        ...prevState,
-        [e.target.id]: e.target.value,
-      }));
-    }
-    async function onSubmit() {
-      try {
-        if (auth.currentUser.displayName !== name) {
-          //update the name in the firebase auth
-          await updateProfile(auth.currentUser, {
-            displayName: name,
-          });
-          //update the name in the firestore
-          const docRef = doc(db,"users",auth.currentUser.uid);
-          await updateDoc(docRef,{
-            name,
-          });
-        }
-        toast.success("profile updated successfully");
-      } catch (error) {
-        toast.error("could not update the details");
-        console.log(error);
+  const navigate = useNavigate();
+  const [FormData, setFormData] = useState({
+    name: auth.currentUser.displayName,
+    email: auth.currentUser.email,
+  });
+  const { name, email } = FormData;
+  console.log(FormData)
+  function onLogout() {
+    auth.signOut();
+    navigate("/");
+  }
+
+  const [changeDetail, setChangeDetail] = useState(false);
+
+  function onChange(e) {
+    setFormData((prevState) => ({
+      ...prevState,
+      [e.target.id]: e.target.value,
+    }));
+  }
+  async function onSubmit() {
+    try {
+      if (auth.currentUser.displayName !== name) {
+        //update the name in the firebase auth
+        await updateProfile(auth.currentUser, {
+          displayName: name,
+        });
+        //update the name in the firestore
+        const docRef = doc(db, "users", auth.currentUser.uid);
+        await updateDoc(docRef, {
+          name,
+        });
       }
+      toast.success("profile updated successfully");
+    } catch (error) {
+      toast.error("could not update the details");
+      console.log(error);
     }
+  }
   return (
     <>
       <section className="max-w-6xl mx-auto flex justify-center items-center flex-col">
@@ -61,9 +61,8 @@ function Profile() {
               id="name"
               type="text"
               value={name}
-              className={`w-full px-4 py-6 text-xl text-gray-700 bg-white  border-gray-300 rounded transition ease-in-out mb-6 ${
-                changeDetail && "bg-red-200 focus:bg-red-200"
-              }`}
+              className={`w-full px-4 py-6 text-xl text-gray-700 bg-white  border-gray-300 rounded transition ease-in-out mb-6 ${changeDetail && "bg-red-200 focus:bg-red-200"
+                }`}
             />
             {/*email input*/}
 
