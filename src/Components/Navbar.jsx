@@ -24,41 +24,36 @@ export default function Navbar() {
           <ul className="flex space-x-4 sm:space-x-6 md:space-x-8 lg:space-x-10 xl:space-x-12 2xl:space-x-14">
             <li
               onClick={() => navigate("/")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/") && "text-black border-b-black"
-              }`}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${pathMatchRoute("/") && "text-black border-b-black"
+                }`}
             >
               Dashboard
             </li>
             <li
               onClick={() => navigate("/tickets")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/tickets") && "text-black border-b-black"
-              }`}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${pathMatchRoute("/tickets") && "text-black border-b-black"
+                }`}
             >
               Tickets
             </li>
             <li
               onClick={() => navigate("/programs")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/programs") && "text-black border-b-black"
-              }`}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${pathMatchRoute("/programs") && "text-black border-b-black"
+                }`}
             >
               Knowledge Base
             </li>
             <li
               onClick={() => navigate("/notifications")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/notifications") && "text-black border-b-black"
-              }`}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${pathMatchRoute("/notifications") && "text-black border-b-black"
+                }`}
             >
               Notifications
             </li>
             <li
               onClick={() => navigate("/sign-in")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/sign-in") && "text-black border-b-black"
-              }`}
+              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${pathMatchRoute("/sign-in") && "text-black border-b-black"
+                }`}
             >
               Sign In
             </li>
