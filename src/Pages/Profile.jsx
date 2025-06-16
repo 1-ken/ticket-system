@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import {
   doc,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 function Profile() {
   const auth = getAuth();
@@ -14,15 +15,41 @@ function Profile() {
   const [FormData, setFormData] = useState({
     name: "",
     email: "",
+    role: "",
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setFormData({
-          name: user.displayName || "",
-          email: user.email || "",
-        });
+        try {
+          // Fetch user data from Firestore
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setFormData({
+              name: user.displayName || userData.name || "",
+              email: user.email || "",
+              role: userData.role || "user", // Default to "user" if no role found
+            });
+          } else {
+            // If no Firestore document exists, use auth data
+            setFormData({
+              name: user.displayName || "",
+              email: user.email || "",
+              role: "user", // Default role
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          toast.error("Error loading profile data");
+          setFormData({
+            name: user.displayName || "",
+            email: user.email || "",
+            role: "user",
+          });
+        }
       } else {
         navigate("/sign-in");
       }
@@ -31,7 +58,7 @@ function Profile() {
 
     return () => unsubscribe();
   }, [auth, navigate]);
-    const { name, email } = FormData;
+    const { name, email, role } = FormData;
     console.log(FormData)
     function onLogout() {
       auth.signOut();
@@ -102,6 +129,14 @@ function Profile() {
               value={email}
               className="w-full px-4 py-6 text-xl text-gray-700 bg-white  border-gray-300 rounded transition ease-in-out mb-6"
             />
+
+            {/*role display*/}
+            <div className="w-full px-4 py-6 text-xl text-gray-700 bg-gray-100 border-gray-300 rounded mb-6">
+              <span className="font-semibold">Role: </span>
+              <span className={`capitalize ${role === 'technician' ? 'text-blue-600' : 'text-green-600'}`}>
+                {role}
+              </span>
+            </div>
 
             <div className="flex justify-between whitespace-nowrap text-sm  sm:text-lg">
               <p className="flex items-center">

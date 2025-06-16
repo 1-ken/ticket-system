@@ -5,6 +5,7 @@ import {GoogleAuthProvider, getAuth, signInWithPopup} from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc} from 'firebase/firestore';
 import { db } from '../firebase';
 import { useNavigate } from 'react-router';
+import { navigateBasedOnRole } from '../utils/roleBasedNavigation';
 
 
 export default function OAuth() {
@@ -29,6 +30,7 @@ export default function OAuth() {
         await setDoc(docRef, {
           name: user.displayName,
           email: user.email,
+          role: "user", // Default role for Google sign-in users
           timestamp: serverTimestamp(),
         });
         console.log("User added to Firestore");
@@ -36,7 +38,8 @@ export default function OAuth() {
         console.log("User already exists in Firestore");
       }
 
-      navigate('/');
+      // Navigate based on user role
+      await navigateBasedOnRole(user, navigate);
     } catch (error) {
       toast.error("Could not authorize with Google");
       console.error("Error during Google sign-in: ", error);

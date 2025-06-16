@@ -1,6 +1,8 @@
 import Navbar from "./Components/Navbar";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./Pages/TechnicianHome"
+import Knowledgebase from "./Pages/Knowledgebase";
+import TechnicianHome from "./Pages/TechnicianHome"
+import UserHome from "./Pages/UserHome"
 import Profile from "./Pages/Profile";
 import Notifications from "./Pages/Notifications";
 import Tickets from "./Pages/Tickets";
@@ -16,7 +18,8 @@ function App() {
       <Router>
       <Navbar/>
         <Routes>
-          <Route path="/" element={<Home/>}/>
+          <Route path="/technician-home" element={<TechnicianHome/>}/>
+          <Route path="/user-home" element={<UserHome/>}/>
           <Route path="/profile" element={<PrivateRoute/>}>
             <Route index element={<Profile/>}/>
           </Route>        
@@ -24,6 +27,8 @@ function App() {
           <Route path="/tickets" element = {<Tickets/>}/>
           <Route path="/sign-in" element = {<SignIn/>}/>
           <Route path="/sign-up" element = {<SignUp/>}/>
+          <Route path="/Knowledge-base" element = {<Knowledgebase/>}/>
+
           <Route path="/forgot-password" element = {<ForgotPassword/>}/>
         </Routes>
       </Router>
