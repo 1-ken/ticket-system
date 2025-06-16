@@ -10,6 +10,7 @@ import Tickets from "./Pages/Tickets";
 import { ToastContainer } from "react-toastify";
 import SignIn from "./Pages/SignIn";
 import SignUp from "./Pages/SignUp";
+import AdminSignUp from "./Pages/AdminSignUp";
 import ForgotPassword from "./Pages/ForgotPassword";
 import PrivateRoute from "./Components/PrivateRoute";
 
@@ -29,8 +30,8 @@ function App() {
           <Route path="/tickets" element = {<Tickets/>}/>
           <Route path="/sign-in" element = {<SignIn/>}/>
           <Route path="/sign-up" element = {<SignUp/>}/>
+          <Route path="/admin-signup" element = {<AdminSignUp/>}/>
           <Route path="/Knowledge-base" element = {<Knowledgebase/>}/>
-
           <Route path="/forgot-password" element = {<ForgotPassword/>}/>
         </Routes>
       </Router>
