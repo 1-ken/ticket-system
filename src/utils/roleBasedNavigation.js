@@ -8,7 +8,13 @@ export const navigateBasedOnRole = async (user, navigate) => {
     
     if (docSnap.exists()) {
       const userData = docSnap.data();
-      const role = userData.role || "user";
+      const role = userData.role;
+      
+      // If no role is assigned, redirect to role selection
+      if (!role) {
+        navigate("/role-selection");
+        return;
+      }
       
       if (role === "technician") {
         navigate("/technician-home");
