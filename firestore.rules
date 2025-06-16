@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isTechnician() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'technician';
+    }
+    
+    function isUser() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'user';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      // Anyone can read their own profile
+      // Admins can read all profiles
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Users can only update their own profile
+      // Admins can update any profile
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Only allow creation through the application code
+      allow create: if isAuthenticated();
+    }
+
+    // Tickets collection rules
+    match /tickets/{ticketId} {
+      // Admins can read all tickets
+      // Technicians can read tickets assigned to them or unassigned tickets
+      // Users can only read their own tickets
+      allow read: if isAdmin() || 
+        (isTechnician() && (resource.data.assignedTo == request.auth.uid || resource.data.assignedTo == null)) ||
+        (isUser() && resource.data.createdBy == request.auth.uid);
+      
+      // Users can create tickets
+      // Admins can create tickets
+      allow create: if isAuthenticated() && 
+        (isUser() || isAdmin()) &&
+        request.resource.data.createdBy == request.auth.uid;
+      
+      // Admins can update any ticket
+      // Technicians can update tickets assigned to them
+      // Users can only update their own tickets' specific fields
+      allow update: if isAdmin() ||
+        (isTechnician() && (resource.data.assignedTo == request.auth.uid || resource.data.assignedTo == null)) ||
+        (isUser() && resource.data.createdBy == request.auth.uid && 
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'description']));
+    }
+
+    // Ticket comments subcollection rules
+    match /tickets/{ticketId}/ticket_comments/{commentId} {
+      // Anyone involved with the ticket can read comments
+      allow read: if isAdmin() ||
+        (isTechnician() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.assignedTo == request.auth.uid) ||
+        (isUser() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid);
+      
+      // Anyone involved with the ticket can add comments
+      allow create: if isAuthenticated() &&
+        request.resource.data.authorId == request.auth.uid &&
+        (
+          isAdmin() ||
+          (isTechnician() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.assignedTo == request.auth.uid) ||
+          (isUser() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid)
+        );
+    }
+
+    // Ticket feedback rules
+    match /tickets/{ticketId}/feedback/{feedbackId} {
+      // Only the ticket creator can create feedback
+      allow create: if isUser() && 
+        get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid;
+      
+      // Admins and the ticket creator can read feedback
+      allow read: if isAdmin() ||
+        (isUser() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid);
+    }
+
+    // Notifications collection rules
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if isAuthenticated() && 
+        resource.data.uid == request.auth.uid;
+      
+      // Only allow creation through the application code (admin functions)
+      allow create: if false;
+      
+      // Users can only update their own notifications (e.g., marking as read)
+      allow update: if isAuthenticated() && 
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+    }
+  }
+}

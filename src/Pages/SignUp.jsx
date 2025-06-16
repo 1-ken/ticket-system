@@ -40,12 +40,16 @@ export default function SignUp() {
       updateProfile(auth.currentUser, {
         displayName: name,
       });
-      const formDataCopy = { ...formData };
-      delete formDataCopy.password;
-      formDataCopy.timestamp = serverTimestamp();
-      formDataCopy.role = role; // Ensure role is included
+      const userData = {
+        uid: user.uid,
+        name: name,
+        email: email,
+        role: role,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp()
+      };
 
-      await setDoc(doc(db, "users", user.uid), formDataCopy);
+      await setDoc(doc(db, "users", user.uid), userData);
       
       // Navigate based on user role
       await navigateBasedOnRole(user, navigate);

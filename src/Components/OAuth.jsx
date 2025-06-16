@@ -28,10 +28,12 @@ export default function OAuth() {
       if (!docSnap.exists()) {
         console.log("User does not exist in Firestore. Adding user...");
         await setDoc(docRef, {
+          uid: user.uid,
           name: user.displayName,
           email: user.email,
           role: null, // No role assigned yet for first-time Google users
-          timestamp: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp()
         });
         console.log("User added to Firestore");
         // Redirect to role selection for first-time users

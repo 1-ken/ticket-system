@@ -55,14 +55,16 @@ export default function AdminSignUp() {
         displayName: name,
       });
       
-      const formDataCopy = { 
-        name,
-        email,
+      const userData = {
+        uid: user.uid,
+        name: name,
+        email: email,
         role: "admin",
-        timestamp: serverTimestamp()
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp()
       };
 
-      await setDoc(doc(db, "users", user.uid), formDataCopy);
+      await setDoc(doc(db, "users", user.uid), userData);
       
       // Navigate based on user role
       await navigateBasedOnRole(user, navigate);

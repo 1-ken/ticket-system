@@ -1,9 +1,8 @@
-import React from 'react'
+import React from 'react';
+import TicketList from '../Components/TicketList';
 
 const Tickets = () => {
-  return (
-    <div>Tickets</div>
-  )
+  return <TicketList />;
 }
 
 export default Tickets
