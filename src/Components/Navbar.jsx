@@ -3,6 +3,7 @@ import logo from "./logo.svg";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { navigateBasedOnRole } from "../utils/roleBasedNavigation";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const [pageState, setPageState] = useState();
@@ -45,7 +46,7 @@ export default function Navbar() {
           />
         </div>
         <div>
-          <ul className="flex space-x-4 sm:space-x-6 md:space-x-8 lg:space-x-10 xl:space-x-12 2xl:space-x-14">
+          <ul className="flex space-x-4 sm:space-x-6 md:space-x-8 lg:space-x-10 xl:space-x-12 2xl:space-x-14 items-center">
             <li
               onClick={handleDashboardClick}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
@@ -77,6 +78,9 @@ export default function Navbar() {
               }`}
             >
               Notifications
+            </li>
+            <li className="py-2 md:py-3">
+              <NotificationBell />
             </li>
             <li
                 onClick={() => navigate("/profile")}

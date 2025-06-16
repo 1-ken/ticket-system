@@ -98,13 +98,20 @@ service cloud.firestore {
       allow read: if isAuthenticated() && 
         resource.data.uid == request.auth.uid;
       
-      // Only allow creation through the application code (admin functions)
-      allow create: if false;
+      // Allow creation by authenticated users (for system notifications)
+      allow create: if isAuthenticated() &&
+        request.resource.data.keys().hasAll(['uid', 'message', 'read', 'timestamp', 'notificationId']) &&
+        request.resource.data.read == false;
       
       // Users can only update their own notifications (e.g., marking as read)
       allow update: if isAuthenticated() && 
         resource.data.uid == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      
+      // Allow deletion of user's own notifications after 30 days
+      allow delete: if isAuthenticated() &&
+        resource.data.uid == request.auth.uid &&
+        resource.data.timestamp < timestamp.date(2024, request.time.toDate().getMonth() - 1, request.time.toDate().getDate());
     }
   }
 }

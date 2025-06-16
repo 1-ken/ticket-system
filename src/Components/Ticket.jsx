@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { updateTicketStatus, addTicketComment, assignTicket } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
+import FeedbackModal from './FeedbackModal';
 
 export default function Ticket({ ticket, userRole, onUpdate }) {
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const auth = getAuth();
 
   const statusColors = {
@@ -169,6 +171,18 @@ export default function Ticket({ ticket, userRole, onUpdate }) {
         >
           Add Comment
         </button>
+
+        {/* Feedback Button - Visible to ticket owner for resolved tickets */}
+        {userRole === 'user' && 
+         ticket.status === 'Resolved' && 
+         ticket.createdBy === auth.currentUser.uid && (
+          <button
+            onClick={() => setShowFeedbackModal(true)}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Rate & Feedback
+          </button>
+        )}
       </div>
 
       {/* Comment Input Form */}
@@ -199,6 +213,14 @@ export default function Ticket({ ticket, userRole, onUpdate }) {
           </div>
         </form>
       )}
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        ticket={ticket}
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onFeedbackSubmitted={onUpdate}
+      />
     </div>
   );
 }

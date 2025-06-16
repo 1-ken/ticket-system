@@ -43,6 +43,23 @@ export const createTicket = async (ticketData, userId) => {
     };
 
     await setDoc(ticketRef, ticket);
+
+    // Notify available technicians about new ticket
+    const techniciansQuery = query(
+      collection(db, "users"),
+      where("role", "==", "technician")
+    );
+    
+    const technicianSnapshot = await getDocs(techniciansQuery);
+    const notifyTechnicians = technicianSnapshot.docs.map(doc => 
+      createNotification(
+        doc.id,
+        `New ticket created: ${ticketData.title} (${ticketData.department}, ${ticketData.floor})`
+      )
+    );
+    
+    await Promise.all(notifyTechnicians);
+
     return { success: true, ticketId };
   } catch (error) {
     console.error("Error creating ticket:", error);
@@ -91,10 +108,36 @@ export const getUserTickets = async (userId, userRole) => {
 export const updateTicketStatus = async (ticketId, status, userId) => {
   try {
     const ticketRef = doc(db, "tickets", ticketId);
+    const ticketDoc = await getDoc(ticketRef);
+    
+    if (!ticketDoc.exists()) {
+      return { success: false, error: "Ticket not found" };
+    }
+
+    const ticketData = ticketDoc.data();
+    
+    // Update ticket status
     await updateDoc(ticketRef, {
       status: status,
       updatedAt: serverTimestamp()
     });
+
+    // Create notification for ticket owner
+    if (ticketData.createdBy !== userId) {
+      await createNotification(
+        ticketData.createdBy,
+        `Your ticket (${ticketData.title}) has been updated to ${status}`
+      );
+    }
+
+    // Create notification for assigned technician
+    if (ticketData.assignedTo && ticketData.assignedTo !== userId) {
+      await createNotification(
+        ticketData.assignedTo,
+        `Ticket ${ticketData.ticketId} (${ticketData.title}) has been updated to ${status}`
+      );
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error updating ticket status:", error);
@@ -106,11 +149,26 @@ export const updateTicketStatus = async (ticketId, status, userId) => {
 export const assignTicket = async (ticketId, technicianId) => {
   try {
     const ticketRef = doc(db, "tickets", ticketId);
+    const ticketDoc = await getDoc(ticketRef);
+    
+    if (!ticketDoc.exists()) {
+      return { success: false, error: "Ticket not found" };
+    }
+
+    const ticketData = ticketDoc.data();
+
     await updateDoc(ticketRef, {
       assignedTo: technicianId,
       status: "In Progress",
       updatedAt: serverTimestamp()
     });
+
+    // Notify ticket owner
+    await createNotification(
+      ticketData.createdBy,
+      `Your ticket (${ticketData.title}) has been assigned to a technician`
+    );
+
     return { success: true };
   } catch (error) {
     console.error("Error assigning ticket:", error);
@@ -121,6 +179,14 @@ export const assignTicket = async (ticketId, technicianId) => {
 // Add comment to ticket
 export const addTicketComment = async (ticketId, authorId, message) => {
   try {
+    const ticketRef = doc(db, "tickets", ticketId);
+    const ticketDoc = await getDoc(ticketRef);
+    
+    if (!ticketDoc.exists()) {
+      return { success: false, error: "Ticket not found" };
+    }
+
+    const ticketData = ticketDoc.data();
     const commentId = `CMT${Date.now()}`;
     const commentRef = doc(db, "tickets", ticketId, "ticket_comments", commentId);
     
@@ -132,6 +198,23 @@ export const addTicketComment = async (ticketId, authorId, message) => {
     };
 
     await setDoc(commentRef, comment);
+
+    // Notify ticket owner if comment is from someone else
+    if (ticketData.createdBy !== authorId) {
+      await createNotification(
+        ticketData.createdBy,
+        `New comment on your ticket (${ticketData.title})`
+      );
+    }
+
+    // Notify assigned technician if comment is from someone else
+    if (ticketData.assignedTo && ticketData.assignedTo !== authorId) {
+      await createNotification(
+        ticketData.assignedTo,
+        `New comment on ticket ${ticketData.ticketId} (${ticketData.title})`
+      );
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error adding comment:", error);
@@ -171,6 +254,21 @@ export const addTicketFeedback = async (ticketId, userId, rating, comment) => {
     };
 
     await setDoc(feedbackRef, feedback);
+
+    // Get ticket details
+    const ticketDoc = await getDoc(doc(db, "tickets", ticketId));
+    if (ticketDoc.exists()) {
+      const ticketData = ticketDoc.data();
+      
+      // Notify assigned technician about feedback
+      if (ticketData.assignedTo) {
+        await createNotification(
+          ticketData.assignedTo,
+          `Feedback received for ticket ${ticketData.ticketId} (${ticketData.title}): ${rating} stars`
+        );
+      }
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error adding feedback:", error);
