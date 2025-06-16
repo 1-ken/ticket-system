@@ -65,7 +65,7 @@ export default function Navbar() {
             <li
               onClick={() => navigate("/Knowledge-base")}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/programs") && "text-black border-b-black"
+                pathMatchRoute("/Knowledge-base") && "text-black border-b-black"
               }`}
             >
               Knowledge Base
