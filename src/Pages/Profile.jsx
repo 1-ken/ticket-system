@@ -133,7 +133,11 @@ function Profile() {
             {/*role display*/}
             <div className="w-full px-4 py-6 text-xl text-gray-700 bg-gray-100 border-gray-300 rounded mb-6">
               <span className="font-semibold">Role: </span>
-              <span className={`capitalize ${role === 'technician' ? 'text-blue-600' : 'text-green-600'}`}>
+              <span className={`capitalize ${
+                role === 'technician' ? 'text-blue-600' : 
+                role === 'admin' ? 'text-red-600' : 
+                'text-green-600'
+              }`}>
                 {role}
               </span>
             </div>

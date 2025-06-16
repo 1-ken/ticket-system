@@ -12,6 +12,8 @@ export const navigateBasedOnRole = async (user, navigate) => {
       
       if (role === "technician") {
         navigate("/technician-home");
+      } else if (role === "admin") {
+        navigate("/admin-home");
       } else {
         navigate("/user-home");
       }

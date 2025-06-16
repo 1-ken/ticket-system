@@ -107,7 +107,7 @@ export default function SignUp() {
             </div>
             <div className="mb-6">
               <p className="text-lg mb-2">Select your role:</p>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <label className="flex items-center">
                   <input
                     type="radio"
@@ -129,6 +129,17 @@ export default function SignUp() {
                     className="mr-2"
                   />
                   <span>Technician</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="admin"
+                    checked={role === "admin"}
+                    onChange={(e) => setFormData(prev => ({...prev, role: e.target.value}))}
+                    className="mr-2"
+                  />
+                  <span>Admin</span>
                 </label>
               </div>
             </div>

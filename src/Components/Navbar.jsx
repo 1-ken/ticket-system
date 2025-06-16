@@ -49,7 +49,7 @@ export default function Navbar() {
             <li
               onClick={handleDashboardClick}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                (pathMatchRoute("/user-home") || pathMatchRoute("/technician-home")) && "text-black border-b-black"
+                (pathMatchRoute("/user-home") || pathMatchRoute("/technician-home") || pathMatchRoute("/admin-home")) && "text-black border-b-black"
               }`}
             >
               Dashboard

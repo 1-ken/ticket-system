@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Knowledgebase from "./Pages/Knowledgebase";
 import TechnicianHome from "./Pages/TechnicianHome"
 import UserHome from "./Pages/UserHome"
+import AdminHome from "./Pages/AdminHome"
 import Profile from "./Pages/Profile";
 import Notifications from "./Pages/Notifications";
 import Tickets from "./Pages/Tickets";
@@ -20,6 +21,7 @@ function App() {
         <Routes>
           <Route path="/technician-home" element={<TechnicianHome/>}/>
           <Route path="/user-home" element={<UserHome/>}/>
+          <Route path="/admin-home" element={<AdminHome/>}/>
           <Route path="/profile" element={<PrivateRoute/>}>
             <Route index element={<Profile/>}/>
           </Route>        
