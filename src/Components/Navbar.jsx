@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
+
 export default function Navbar() {
+  const [pageState, setPageState] = useState();
   const navigate = useNavigate();
   const location = useLocation();
+  const auth = getAuth();
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if(user){
+        setPageState("Profile")
+      }else{
+        setPageState("Sign In")
+      }
+    });
+    return () => unsubscribe();
+  }, [auth]);
   function pathMatchRoute(route) {
     if (route === location.pathname) {
       return true;
@@ -55,13 +69,14 @@ export default function Navbar() {
               Notifications
             </li>
             <li
-              onClick={() => navigate("/sign-in")}
-              className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
-                pathMatchRoute("/sign-in") && "text-black border-b-black"
-              }`}
-            >
-              Sign In
-            </li>
+                onClick={() => navigate("/profile")}
+                className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
+                  (pathMatchRoute("/profile") || pathMatchRoute("/sign-in")) &&
+                  "text-black border-b-black"
+                }`}
+              >
+                {pageState}
+              </li>
           </ul>
         </div>
       </header>

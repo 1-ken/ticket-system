@@ -1,5 +1,5 @@
-import { getAuth, updateProfile } from "firebase/auth";
-import React, { useState } from "react";
+import { getAuth, updateProfile, onAuthStateChanged } from "firebase/auth";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { db } from "../firebase";
@@ -9,11 +9,28 @@ import {
 } from "firebase/firestore";
 function Profile() {
   const auth = getAuth();
-    const navigate = useNavigate();
-    const [FormData, setFormData] = useState({
-      name: auth.currentUser.displayName,
-      email: auth.currentUser.email,
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [FormData, setFormData] = useState({
+    name: "",
+    email: "",
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setFormData({
+          name: user.displayName || "",
+          email: user.email || "",
+        });
+      } else {
+        navigate("/sign-in");
+      }
+      setLoading(false);
     });
+
+    return () => unsubscribe();
+  }, [auth, navigate]);
     const { name, email } = FormData;
     console.log(FormData)
     function onLogout() {
@@ -31,23 +48,34 @@ function Profile() {
     }
     async function onSubmit() {
       try {
-        if (auth.currentUser.displayName !== name) {
+        const user = auth.currentUser;
+        if (!user) {
+          toast.error("Please sign in to update profile");
+          navigate("/sign-in");
+          return;
+        }
+
+        if (user.displayName !== name) {
           //update the name in the firebase auth
-          await updateProfile(auth.currentUser, {
+          await updateProfile(user, {
             displayName: name,
           });
           //update the name in the firestore
-          const docRef = doc(db,"users",auth.currentUser.uid);
-          await updateDoc(docRef,{
+          const docRef = doc(db, "users", user.uid);
+          await updateDoc(docRef, {
             name,
           });
+          toast.success("Profile updated successfully");
         }
-        toast.success("profile updated successfully");
       } catch (error) {
-        toast.error("could not update the details");
+        toast.error("Could not update the details");
         console.log(error);
       }
     }
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+
   return (
     <>
       <section className="max-w-6xl mx-auto flex justify-center items-center flex-col">
