@@ -7,7 +7,7 @@ import AdminHome from "./Pages/AdminHome";
 import Profile from "./Pages/Profile";
 import Notifications from "./Pages/Notifications";
 import Tickets from "./Pages/Tickets";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import SignIn from "./Pages/SignIn";
 import SignUp from "./Pages/SignUp";
 import AdminSignUp from "./Pages/AdminSignUp";

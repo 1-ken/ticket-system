@@ -36,9 +36,7 @@ export default function TicketList() {
       const result = await getUserTickets(auth.currentUser.uid, role);
       if (result.success) {
         setTickets(result.tickets);
-      } else {
-        toast.error('Failed to fetch tickets');
-      }
+      } 
     } catch (error) {
       console.error('Error fetching tickets:', error);
       toast.error('Error loading tickets');

@@ -16,12 +16,9 @@ export default function TechnicianHome() {
       const result = await getUserTickets(auth.currentUser.uid, 'technician');
       if (result.success) {
         setTickets(result.tickets);
-      } else {
-        toast.error('Failed to fetch tickets');
-      }
+      } 
     } catch (error) {
       console.error('Error fetching tickets:', error);
-      toast.error('Error loading tickets');
     } finally {
       setLoading(false);
     }
