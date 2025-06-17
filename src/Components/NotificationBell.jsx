@@ -12,7 +12,7 @@ export default function NotificationBell() {
 
   const fetchNotifications = async () => {
     if (!auth.currentUser) return;
-    
+
     setLoading(true);
     try {
       const result = await getUserNotifications(auth.currentUser.uid);
@@ -90,7 +90,7 @@ export default function NotificationBell() {
           <div className="p-4 border-b">
             <h3 className="text-lg font-semibold text-gray-700">Notifications</h3>
           </div>
-          
+
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500">
@@ -104,9 +104,8 @@ export default function NotificationBell() {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b hover:bg-gray-50 transition-colors ${
-                    !notification.read ? 'bg-blue-50' : ''
-                  }`}
+                  className={`p-4 border-b hover:bg-gray-50 transition-colors ${!notification.read ? 'bg-blue-50' : ''
+                    }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
