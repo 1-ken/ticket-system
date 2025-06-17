@@ -32,33 +32,40 @@ export const createTicket = async (ticketData, userId) => {
       description: ticketData.description,
       category: ticketData.category,
       priority: ticketData.priority,
-      status: "Open",
-      createdBy: userId,
-      assignedTo: null,
-      department: ticketData.department,
-      floor: ticketData.floor,
-      officeNumber: ticketData.officeNumber,
+      status: "Open",     // Explicit initial status
+      createdBy: userId,  // Ensure creator is set
+      assignedTo: null,   // Explicit null for unassigned tickets
+      department: ticketData.department || 'General',
+      floor: ticketData.floor || '1',
+      officeNumber: ticketData.officeNumber || '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
+    // Create the ticket in Firestore
     await setDoc(ticketRef, ticket);
 
-    // Notify available technicians about new ticket
-    const techniciansQuery = query(
-      collection(db, "users"),
-      where("role", "==", "technician")
-    );
-    
-    const technicianSnapshot = await getDocs(techniciansQuery);
-    const notifyTechnicians = technicianSnapshot.docs.map(doc => 
-      createNotification(
-        doc.id,
-        `New ticket created: ${ticketData.title} (${ticketData.department}, ${ticketData.floor})`
-      )
-    );
-    
-    await Promise.all(notifyTechnicians);
+    try {
+      // Then attempt to notify technicians
+      const techniciansQuery = query(
+        collection(db, "users"),
+        where("role", "==", "technician")
+      );
+      
+      const technicianSnapshot = await getDocs(techniciansQuery);
+      const notifyTechnicians = technicianSnapshot.docs.map(doc => 
+        createNotification(
+          doc.id,
+          `New ticket created: ${ticketData.title} (${ticketData.department}, ${ticketData.floor})`
+        )
+      );
+      
+      await Promise.all(notifyTechnicians);
+    } catch (notificationError) {
+      // If notification creation fails, log it but don't fail the ticket creation
+      console.warn("Failed to create notifications:", notificationError);
+      // The ticket was still created successfully, so we return success
+    }
 
     return { success: true, ticketId };
   } catch (error) {

@@ -98,7 +98,8 @@ service cloud.firestore {
       allow read: if isAuthenticated() && 
         resource.data.uid == request.auth.uid;
       
-      // Allow creation by authenticated users (for system notifications)
+      // Allow creation of notifications by authenticated users
+      // This allows system-generated notifications for tickets, assignments, etc.
       allow create: if isAuthenticated() &&
         request.resource.data.keys().hasAll(['uid', 'message', 'read', 'timestamp', 'notificationId']) &&
         request.resource.data.read == false;
