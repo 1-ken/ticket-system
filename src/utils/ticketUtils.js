@@ -1,15 +1,15 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  query,
+  where,
+  orderBy,
   serverTimestamp,
-  addDoc
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -25,21 +25,21 @@ export const createTicket = async (ticketData, userId) => {
   try {
     const ticketId = generateTicketId();
     const ticketRef = doc(db, "tickets", ticketId);
-    
+
     const ticket = {
       ticketId: ticketId,
       title: ticketData.title,
       description: ticketData.description,
       category: ticketData.category,
       priority: ticketData.priority,
-      status: "Open",     // Explicit initial status
-      createdBy: userId,  // Ensure creator is set
-      assignedTo: null,   // Explicit null for unassigned tickets
-      department: ticketData.department || 'General',
-      floor: ticketData.floor || '1',
-      officeNumber: ticketData.officeNumber || '',
+      status: "Open", // Explicit initial status
+      createdBy: userId, // Ensure creator is set
+      assignedTo: null, // Explicit null for unassigned tickets
+      department: ticketData.department || "General",
+      floor: ticketData.floor || "1",
+      officeNumber: ticketData.officeNumber || "",
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     };
 
     // Create the ticket in Firestore
@@ -51,15 +51,15 @@ export const createTicket = async (ticketData, userId) => {
         collection(db, "users"),
         where("role", "==", "technician")
       );
-      
+
       const technicianSnapshot = await getDocs(techniciansQuery);
-      const notifyTechnicians = technicianSnapshot.docs.map(doc => 
+      const notifyTechnicians = technicianSnapshot.docs.map((doc) =>
         createNotification(
           doc.id,
           `New ticket created: ${ticketData.title} (${ticketData.department}, ${ticketData.floor})`
         )
       );
-      
+
       await Promise.all(notifyTechnicians);
     } catch (notificationError) {
       // If notification creation fails, log it but don't fail the ticket creation
@@ -78,21 +78,21 @@ export const createTicket = async (ticketData, userId) => {
 export const getUserTickets = async (userId, userRole) => {
   try {
     let q;
-    
+
     if (userRole === "admin") {
       // Admin can see all tickets
       q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
     } else if (userRole === "technician") {
       // Technician can see assigned tickets and unassigned tickets
       q = query(
-        collection(db, "tickets"), 
+        collection(db, "tickets"),
         where("assignedTo", "in", [userId, null]),
         orderBy("createdAt", "desc")
       );
     } else {
       // User can only see their own tickets
       q = query(
-        collection(db, "tickets"), 
+        collection(db, "tickets"),
         where("createdBy", "==", userId),
         orderBy("createdAt", "desc")
       );
@@ -116,17 +116,17 @@ export const updateTicketStatus = async (ticketId, status, userId) => {
   try {
     const ticketRef = doc(db, "tickets", ticketId);
     const ticketDoc = await getDoc(ticketRef);
-    
+
     if (!ticketDoc.exists()) {
       return { success: false, error: "Ticket not found" };
     }
 
     const ticketData = ticketDoc.data();
-    
+
     // Update ticket status
     await updateDoc(ticketRef, {
       status: status,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
 
     // Create notification for ticket owner
@@ -157,7 +157,7 @@ export const assignTicket = async (ticketId, technicianId) => {
   try {
     const ticketRef = doc(db, "tickets", ticketId);
     const ticketDoc = await getDoc(ticketRef);
-    
+
     if (!ticketDoc.exists()) {
       return { success: false, error: "Ticket not found" };
     }
@@ -167,7 +167,7 @@ export const assignTicket = async (ticketId, technicianId) => {
     await updateDoc(ticketRef, {
       assignedTo: technicianId,
       status: "In Progress",
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
 
     // Notify ticket owner
@@ -188,20 +188,26 @@ export const addTicketComment = async (ticketId, authorId, message) => {
   try {
     const ticketRef = doc(db, "tickets", ticketId);
     const ticketDoc = await getDoc(ticketRef);
-    
+
     if (!ticketDoc.exists()) {
       return { success: false, error: "Ticket not found" };
     }
 
     const ticketData = ticketDoc.data();
     const commentId = `CMT${Date.now()}`;
-    const commentRef = doc(db, "tickets", ticketId, "ticket_comments", commentId);
-    
+    const commentRef = doc(
+      db,
+      "tickets",
+      ticketId,
+      "ticket_comments",
+      commentId
+    );
+
     const comment = {
       commentId: commentId,
       authorId: authorId,
       message: message,
-      timestamp: serverTimestamp()
+      timestamp: serverTimestamp(),
     };
 
     await setDoc(commentRef, comment);
@@ -235,7 +241,7 @@ export const getTicketComments = async (ticketId) => {
     const commentsRef = collection(db, "tickets", ticketId, "ticket_comments");
     const q = query(commentsRef, orderBy("timestamp", "asc"));
     const querySnapshot = await getDocs(q);
-    
+
     const comments = [];
     querySnapshot.forEach((doc) => {
       comments.push({ id: doc.id, ...doc.data() });
@@ -251,13 +257,19 @@ export const getTicketComments = async (ticketId) => {
 // Add feedback for closed ticket
 export const addTicketFeedback = async (ticketId, userId, rating, comment) => {
   try {
-    const feedbackRef = doc(db, "tickets", ticketId, "feedback", "user_feedback");
-    
+    const feedbackRef = doc(
+      db,
+      "tickets",
+      ticketId,
+      "feedback",
+      "user_feedback"
+    );
+
     const feedback = {
       rating: rating,
       comment: comment,
       submittedBy: userId,
-      submittedAt: serverTimestamp()
+      submittedAt: serverTimestamp(),
     };
 
     await setDoc(feedbackRef, feedback);
@@ -266,7 +278,7 @@ export const addTicketFeedback = async (ticketId, userId, rating, comment) => {
     const ticketDoc = await getDoc(doc(db, "tickets", ticketId));
     if (ticketDoc.exists()) {
       const ticketData = ticketDoc.data();
-      
+
       // Notify assigned technician about feedback
       if (ticketData.assignedTo) {
         await createNotification(
@@ -287,13 +299,13 @@ export const addTicketFeedback = async (ticketId, userId, rating, comment) => {
 export const createNotification = async (uid, message) => {
   try {
     const notificationRef = collection(db, "notifications");
-    
+
     const notification = {
       notificationId: `NTF${Date.now()}`,
       uid: uid,
       message: message,
       read: false,
-      timestamp: serverTimestamp()
+      timestamp: serverTimestamp(),
     };
 
     await addDoc(notificationRef, notification);
@@ -308,11 +320,11 @@ export const createNotification = async (uid, message) => {
 export const getUserNotifications = async (userId) => {
   try {
     const q = query(
-      collection(db, "notifications"), 
+      collection(db, "notifications"),
       where("uid", "==", userId),
       orderBy("timestamp", "desc")
     );
-    
+
     const querySnapshot = await getDocs(q);
     const notifications = [];
     querySnapshot.forEach((doc) => {
@@ -331,7 +343,7 @@ export const markNotificationAsRead = async (notificationId) => {
   try {
     const notificationRef = doc(db, "notifications", notificationId);
     await updateDoc(notificationRef, {
-      read: true
+      read: true,
     });
     return { success: true };
   } catch (error) {

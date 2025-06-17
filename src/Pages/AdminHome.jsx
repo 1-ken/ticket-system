@@ -60,7 +60,7 @@ export default function AdminHome() {
 
   const filteredTickets = () => {
     if (filter === 'all') return tickets;
-    return tickets.filter(ticket => 
+    return tickets.filter(ticket =>
       ticket.status.toLowerCase().replace(' ', '-') === filter
     );
   };
@@ -109,31 +109,28 @@ export default function AdminHome() {
       <div className="flex space-x-1 mb-8">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-            activeTab === 'overview'
-              ? 'bg-red-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+          className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeTab === 'overview'
+            ? 'bg-red-500 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
         >
           Overview
         </button>
         <button
           onClick={() => setActiveTab('tickets')}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-            activeTab === 'tickets'
-              ? 'bg-red-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+          className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeTab === 'tickets'
+            ? 'bg-red-500 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
         >
           All Tickets
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-            activeTab === 'users'
-              ? 'bg-red-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+          className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeTab === 'users'
+            ? 'bg-red-500 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
         >
           User Management
         </button>
@@ -202,41 +199,37 @@ export default function AdminHome() {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  filter === 'all'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-md transition-colors ${filter === 'all'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 All
               </button>
               <button
                 onClick={() => setFilter('open')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  filter === 'open'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-md transition-colors ${filter === 'open'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Open
               </button>
               <button
                 onClick={() => setFilter('in-progress')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  filter === 'in-progress'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-md transition-colors ${filter === 'in-progress'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 In Progress
               </button>
               <button
                 onClick={() => setFilter('resolved')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  filter === 'resolved'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-md transition-colors ${filter === 'resolved'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Resolved
               </button>
@@ -296,11 +289,10 @@ export default function AdminHome() {
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'admin' ? 'bg-red-100 text-red-800' :
                         user.role === 'technician' ? 'bg-blue-100 text-blue-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
+                          'bg-green-100 text-green-800'
+                        }`}>
                         {user.role}
                       </span>
                     </td>

@@ -32,7 +32,7 @@ export default function TicketList() {
     try {
       const role = await fetchUserRole(auth.currentUser.uid);
       setUserRole(role);
-      
+
       const result = await getUserTickets(auth.currentUser.uid, role);
       if (result.success) {
         setTickets(result.tickets);
@@ -75,10 +75,10 @@ export default function TicketList() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">
           {userRole === 'admin' ? 'All Tickets' :
-           userRole === 'technician' ? 'Available & Assigned Tickets' :
-           'My Tickets'}
+            userRole === 'technician' ? 'Available & Assigned Tickets' :
+              'My Tickets'}
         </h1>
-        
+
         {/* Only show Create Ticket button for regular users */}
         {userRole === 'user' && (
           <button
@@ -100,7 +100,7 @@ export default function TicketList() {
         {tickets.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 text-lg">
-              {userRole === 'user' ? 
+              {userRole === 'user' ?
                 "You haven't created any tickets yet." :
                 "No tickets available."}
             </p>

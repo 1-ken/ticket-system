@@ -98,31 +98,28 @@ export default function TechnicianHome() {
         <div className="flex gap-2">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-md transition-colors ${
-              filter === 'all'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-md transition-colors ${filter === 'all'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             All Tickets
           </button>
           <button
             onClick={() => setFilter('assigned')}
-            className={`px-4 py-2 rounded-md transition-colors ${
-              filter === 'assigned'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-md transition-colors ${filter === 'assigned'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             My Tickets
           </button>
           <button
             onClick={() => setFilter('unassigned')}
-            className={`px-4 py-2 rounded-md transition-colors ${
-              filter === 'unassigned'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-md transition-colors ${filter === 'unassigned'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Unassigned
           </button>
@@ -136,11 +133,11 @@ export default function TechnicianHome() {
             <div className="text-gray-400 text-6xl mb-4">🎯</div>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No tickets found</h3>
             <p className="text-gray-500">
-              {filter === 'assigned' 
+              {filter === 'assigned'
                 ? "You haven't been assigned any tickets yet"
                 : filter === 'unassigned'
-                ? "No unassigned tickets available"
-                : "No tickets available at the moment"}
+                  ? "No unassigned tickets available"
+                  : "No tickets available at the moment"}
             </p>
           </div>
         ) : (
