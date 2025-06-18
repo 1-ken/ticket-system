@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { createTicket } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
+import { useAuthstatus } from '../hooks/useAuthstatus';
 
 export default function CreateTicket({ onTicketCreated }) {
   const [loading, setLoading] = useState(false);
+  const { userRole } = useAuthstatus();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'Hardware', // Default category
-    priority: 'Low', // Default priority
+    category: 'Hardware',
+    priority: 'Low',
     department: '',
     floor: '',
     officeNumber: ''
@@ -18,6 +20,23 @@ export default function CreateTicket({ onTicketCreated }) {
   const categories = ['Hardware', 'Software', 'Network', 'Other'];
   const priorities = ['Low', 'Medium', 'High'];
   const auth = getAuth();
+
+  // If user role is not allowed, show message
+  if (!userRole) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <p className="text-red-500">Loading user permissions...</p>
+      </div>
+    );
+  }
+
+  if (userRole !== 'user' && userRole !== 'admin') {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <p className="text-red-500">You do not have permission to create tickets. Only users and administrators can create tickets.</p>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,6 +48,13 @@ export default function CreateTicket({ onTicketCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Double-check permissions before submitting
+    if (!userRole || (userRole !== 'user' && userRole !== 'admin')) {
+      toast.error('You do not have permission to create tickets');
+      return;
+    }
+
     setLoading(true);
 
     try {

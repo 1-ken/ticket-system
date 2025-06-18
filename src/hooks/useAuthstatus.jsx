@@ -1,18 +1,37 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import  { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export function useAuthstatus() {
     const [loggedIn, setLoggedIn] = useState(false);
     const [checkingStatus, setCheckingStatus] = useState(true);
-    useEffect(()=>{
+    const [userRole, setUserRole] = useState(null);
+
+    useEffect(() => {
         const auth = getAuth();
-        onAuthStateChanged(auth,(user)=>{
-            if(user){
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
                 setLoggedIn(true);
+                // Fetch user role from Firestore
+                const userRef = doc(db, "users", user.uid);
+                try {
+                    const userDoc = await getDoc(userRef);
+                    if (userDoc.exists()) {
+                        setUserRole(userDoc.data().role);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user role:", error);
+                }
+            } else {
+                setLoggedIn(false);
+                setUserRole(null);
             }
             setCheckingStatus(false);
         });
-  
-    },[]);
-  return {loggedIn,checkingStatus};
+
+        return () => unsubscribe();
+    }, []);
+
+    return { loggedIn, checkingStatus, userRole };
 }

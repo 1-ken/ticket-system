@@ -45,7 +45,7 @@ service cloud.firestore {
       // Technicians can read tickets assigned to them or unassigned tickets
       // Users can only read their own tickets
       allow read: if isAdmin() || 
-        (isTechnician() && (resource.data.assignedTo == request.auth.uid || resource.data.assignedTo == null)) ||
+        isTechnician() ||  // Allow technicians to read all tickets
         (isUser() && resource.data.createdBy == request.auth.uid);
       
       // Users can create tickets
@@ -68,7 +68,7 @@ service cloud.firestore {
     match /tickets/{ticketId}/ticket_comments/{commentId} {
       // Anyone involved with the ticket can read comments
       allow read: if isAdmin() ||
-        (isTechnician() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.assignedTo == request.auth.uid) ||
+        isTechnician() ||  // Allow technicians to read all comments
         (isUser() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid);
       
       // Anyone involved with the ticket can add comments
@@ -76,7 +76,7 @@ service cloud.firestore {
         request.resource.data.authorId == request.auth.uid &&
         (
           isAdmin() ||
-          (isTechnician() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.assignedTo == request.auth.uid) ||
+          isTechnician() ||  // Allow technicians to comment on all tickets
           (isUser() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid)
         );
     }
@@ -87,8 +87,9 @@ service cloud.firestore {
       allow create: if isUser() && 
         get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid;
       
-      // Admins and the ticket creator can read feedback
+      // Admins, technicians, and the ticket creator can read feedback
       allow read: if isAdmin() ||
+        isTechnician() ||  // Allow technicians to read feedback
         (isUser() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.createdBy == request.auth.uid);
     }
 
