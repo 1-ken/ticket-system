@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { navigateBasedOnRole } from "../utils/roleBasedNavigation";
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -18,8 +19,9 @@ export default function SignUp() {
     name: "",
     email: "",
     password: "",
+    role: "user", // Default role
   });
-  const { name, email, password } = formData;
+  const { name, email, password, role } = formData;
   function onChange(e) {
     setFormData((prevState) => ({
       ...prevState,
@@ -39,12 +41,21 @@ export default function SignUp() {
       updateProfile(auth.currentUser, {
         displayName: name,
       });
-      const formDataCopy = { ...formData };
-      delete formDataCopy.password;
-      formDataCopy.timestamp = serverTimestamp();
+      const userData = {
+        uid: user.uid,
+        name: name,
+        email: email,
+        role: role,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp()
+      };
 
-      await setDoc(doc(db, "users", user.uid), formDataCopy);
-      navigate("/");
+
+      await setDoc(doc(db, "users", user.uid), userData);
+
+      // Navigate based on user role
+      await navigateBasedOnRole(user, navigate);
+
       toast.success("registration was a success");
     } catch (error) {
       toast.error("something went wrong with the registration")
@@ -100,6 +111,33 @@ export default function SignUp() {
                   onClick={() => setShowPassword((prevState) => !prevState)}
                 />
               )}
+            </div>
+            <div className="mb-6">
+              <p className="text-lg mb-2">Select your role:</p>
+              <div className="flex gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="user"
+                    checked={role === "user"}
+                    onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                    className="mr-2"
+                  />
+                  <span>User</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="technician"
+                    checked={role === "technician"}
+                    onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                    className="mr-2"
+                  />
+                  <span>Technician</span>
+                </label>
+              </div>
             </div>
             <div className="flex justify-between whitespace-nowrap text-sm sm:text-lg">
               <p className="mb-6">

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { AiFillEyeInvisible, AiFillEye } from "react-icons/ai";
 import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../Components/OAuth";
+
+import { navigateBasedOnRole } from "../utils/roleBasedNavigation";
 import { signInWithEmailAndPassword, getAuth } from "firebase/auth";
 import { toast } from "react-toastify";
 
@@ -30,6 +32,7 @@ export default function Signin() {
     } catch (error) {
       toast.error("wrong user credentials");
       console.log(error);
+
     }
 
   }

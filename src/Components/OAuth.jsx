@@ -5,6 +5,7 @@ import {GoogleAuthProvider, getAuth, signInWithPopup} from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc} from 'firebase/firestore';
 import { db } from '../firebase';
 import { useNavigate } from 'react-router';
+import { navigateBasedOnRole } from '../utils/roleBasedNavigation';
 
 
 export default function OAuth() {
@@ -27,16 +28,29 @@ export default function OAuth() {
       if (!docSnap.exists()) {
         console.log("User does not exist in Firestore. Adding user...");
         await setDoc(docRef, {
+          uid: user.uid,
           name: user.displayName,
           email: user.email,
-          timestamp: serverTimestamp(),
+          role: null, // No role assigned yet for first-time Google users
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp()
         });
         console.log("User added to Firestore");
+        // Redirect to role selection for first-time users
+        navigate('/role-selection');
       } else {
         console.log("User already exists in Firestore");
+        const userData = docSnap.data();
+        
+        // Check if user has a role assigned
+        if (!userData.role) {
+          // User exists but no role assigned, redirect to role selection
+          navigate('/role-selection');
+        } else {
+          // User has role, navigate based on role
+          await navigateBasedOnRole(user, navigate);
+        }
       }
-
-      navigate('/');
     } catch (error) {
       toast.error("Could not authorize with Google");
       console.error("Error during Google sign-in: ", error);
