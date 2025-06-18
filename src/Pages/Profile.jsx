@@ -8,6 +8,7 @@ import {
   updateDoc,
   getDoc,
 } from "firebase/firestore";
+import ReactLoading from "react-loading"
 function Profile() {
   const auth = getAuth();
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ function Profile() {
           // Fetch user data from Firestore
           const docRef = doc(db, "users", user.uid);
           const docSnap = await getDoc(docRef);
-          
+
           if (docSnap.exists()) {
             const userData = docSnap.data();
             setFormData({
@@ -58,49 +59,51 @@ function Profile() {
 
     return () => unsubscribe();
   }, [auth, navigate]);
-    const { name, email, role } = FormData;
-    console.log(FormData)
-    function onLogout() {
-      auth.signOut();
-      navigate("/");
-    }
-  
-    const [changeDetail, setChangeDetail] = useState(false);
-  
-    function onChange(e) {
-      setFormData((prevState) => ({
-        ...prevState,
-        [e.target.id]: e.target.value,
-      }));
-    }
-    async function onSubmit() {
-      try {
-        const user = auth.currentUser;
-        if (!user) {
-          toast.error("Please sign in to update profile");
-          navigate("/sign-in");
-          return;
-        }
+  const { name, email, role } = FormData;
+  console.log(FormData)
+  function onLogout() {
+    auth.signOut();
+    navigate("/");
+  }
 
-        if (user.displayName !== name) {
-          //update the name in the firebase auth
-          await updateProfile(user, {
-            displayName: name,
-          });
-          //update the name in the firestore
-          const docRef = doc(db, "users", user.uid);
-          await updateDoc(docRef, {
-            name,
-          });
-          toast.success("Profile updated successfully");
-        }
-      } catch (error) {
-        toast.error("Could not update the details");
-        console.log(error);
+  const [changeDetail, setChangeDetail] = useState(false);
+
+  function onChange(e) {
+    setFormData((prevState) => ({
+      ...prevState,
+      [e.target.id]: e.target.value,
+    }));
+  }
+  async function onSubmit() {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("Please sign in to update profile");
+        navigate("/sign-in");
+        return;
       }
+
+      if (user.displayName !== name) {
+        //update the name in the firebase auth
+        await updateProfile(user, {
+          displayName: name,
+        });
+        //update the name in the firestore
+        const docRef = doc(db, "users", user.uid);
+        await updateDoc(docRef, {
+          name,
+        });
+        toast.success("Profile updated successfully");
+      }
+    } catch (error) {
+      toast.error("Could not update the details");
+      console.log(error);
     }
+  }
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <div className="h-screen w-screen items-center justify-center flex flex-row" >
+      <ReactLoading type={"spin"} color={"blue"} height={100} width={100} />
+    </div>
   }
 
   return (
@@ -116,9 +119,8 @@ function Profile() {
               id="name"
               type="text"
               value={name}
-              className={`w-full px-4 py-6 text-xl text-gray-700 bg-white  border-gray-300 rounded transition ease-in-out mb-6 ${
-                changeDetail && "bg-red-200 focus:bg-red-200"
-              }`}
+              className={`w-full px-4 py-6 text-xl text-gray-700 bg-white  border-gray-300 rounded transition ease-in-out mb-6 ${changeDetail && "bg-red-200 focus:bg-red-200"
+                }`}
             />
             {/*email input*/}
 
@@ -133,11 +135,10 @@ function Profile() {
             {/*role display*/}
             <div className="w-full px-4 py-6 text-xl text-gray-700 bg-gray-100 border-gray-300 rounded mb-6">
               <span className="font-semibold">Role: </span>
-              <span className={`capitalize ${
-                role === 'technician' ? 'text-blue-600' : 
-                role === 'admin' ? 'text-red-600' : 
-                'text-green-600'
-              }`}>
+              <span className={`capitalize ${role === 'technician' ? 'text-blue-600' :
+                role === 'admin' ? 'text-red-600' :
+                  'text-green-600'
+                }`}>
                 {role}
               </span>
             </div>

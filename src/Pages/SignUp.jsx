@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { AiFillEyeInvisible, AiFillEye } from "react-icons/ai";
 import { Link } from "react-router-dom";
-import { setDoc,doc, serverTimestamp } from "firebase/firestore";
+import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 import OAuth from "../Components/OAuth";
-import { toast } from "react-toastify";import {
+import { toast } from "react-toastify";
+import {
   getAuth,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -49,10 +50,12 @@ export default function SignUp() {
         lastLogin: serverTimestamp()
       };
 
+
       await setDoc(doc(db, "users", user.uid), userData);
-      
+
       // Navigate based on user role
       await navigateBasedOnRole(user, navigate);
+
       toast.success("registration was a success");
     } catch (error) {
       toast.error("something went wrong with the registration")
@@ -73,7 +76,7 @@ export default function SignUp() {
         <div className="w-full md:w-[67%] lg:w-[40%] lg:ml-5">
           <form onSubmit={onSubmit}>
             <input
-              className="mb-6  w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"
+              className="mb-6 border-2 rounded-lg  w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"
               id="name"
               placeholder="Full Name"
               type="text"
@@ -81,7 +84,7 @@ export default function SignUp() {
               onChange={onChange}
             />
             <input
-              className="mb-6  w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"
+              className="mb-6 border-2 rounded-lg w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"
               id="email"
               placeholder="Email address"
               type="email"
@@ -90,7 +93,7 @@ export default function SignUp() {
             />
             <div className="relative mb-6 ">
               <input
-                className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300  rounded transition ease-in-out"
+                className="w-full px-4 border-2 rounded-lg py-2 text-xl text-gray-700 bg-white border-gray-300  rounded transition ease-in-out"
                 id="password"
                 placeholder="password"
                 type={showPassword ? "text" : "password"}
@@ -118,7 +121,7 @@ export default function SignUp() {
                     name="role"
                     value="user"
                     checked={role === "user"}
-                    onChange={(e) => setFormData(prev => ({...prev, role: e.target.value}))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                     className="mr-2"
                   />
                   <span>User</span>
@@ -129,7 +132,7 @@ export default function SignUp() {
                     name="role"
                     value="technician"
                     checked={role === "technician"}
-                    onChange={(e) => setFormData(prev => ({...prev, role: e.target.value}))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                     className="mr-2"
                   />
                   <span>Technician</span>
