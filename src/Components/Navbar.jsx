@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import logo from "./logo.svg";
+// import logo from "./logo.svg";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { navigateBasedOnRole } from "../utils/roleBasedNavigation";
 import NotificationBell from "./NotificationBell";
+import { FcCustomerSupport } from "react-icons/fc";
 
 export default function Navbar() {
   const [pageState, setPageState] = useState();
@@ -38,12 +39,13 @@ export default function Navbar() {
     <div className="bg-[#ffffff] border-b shadow-sm sticky top-0 z-40">
       <header className="flex justify-between items-center px-3 max-w-6xl mx-auto">
         <div>
-          <img
+          {/* <img
             onClick={handleDashboardClick}
             src={logo}
             alt="logo"
             className="h-10 sm:h-12 md:h-16 lg:h-20 xl:h-24 2xl:h-28 cursor-pointer rounded-full"
-          />
+          /> */}
+          <FcCustomerSupport size={100} />
         </div>
         <div>
           <ul className="flex space-x-4 sm:space-x-6 md:space-x-8 lg:space-x-10 xl:space-x-12 2xl:space-x-14 items-center">

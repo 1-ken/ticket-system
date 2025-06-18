@@ -8,6 +8,7 @@ import {
   updateDoc,
   getDoc,
 } from "firebase/firestore";
+import ReactLoading from "react-loading"
 function Profile() {
   const auth = getAuth();
   const navigate = useNavigate();
@@ -100,7 +101,9 @@ function Profile() {
     }
   }
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <div className="h-screen w-screen items-center justify-center flex flex-row" >
+      <ReactLoading type={"spin"} color={"blue"} height={100} width={100} />
+    </div>
   }
 
   return (
@@ -133,8 +136,8 @@ function Profile() {
             <div className="w-full px-4 py-6 text-xl text-gray-700 bg-gray-100 border-gray-300 rounded mb-6">
               <span className="font-semibold">Role: </span>
               <span className={`capitalize ${role === 'technician' ? 'text-blue-600' :
-                  role === 'admin' ? 'text-red-600' :
-                    'text-green-600'
+                role === 'admin' ? 'text-red-600' :
+                  'text-green-600'
                 }`}>
                 {role}
               </span>

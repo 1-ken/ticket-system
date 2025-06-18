@@ -27,7 +27,7 @@ export default function NotificationBell() {
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      
+
       // Retry logic for connection errors
       if (retryCount < 2 && (
         error.message.includes('ERR_QUIC_PROTOCOL_ERROR') ||
