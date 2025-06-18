@@ -1,9 +1,7 @@
-import React from 'react'
-
-const Knowledgebase = () => {
-  return (
-    <div>Knowledgebase</div>
-  )
+export default function KnowledgeBase() {
+    return (
+        <div>
+            <p>Knowldge Base</p>
+        </div>
+    );
 }
-
-export default Knowledgebase
