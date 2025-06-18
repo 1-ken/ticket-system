@@ -77,32 +77,54 @@ export const createTicket = async (ticketData, userId) => {
 // Get tickets for a user (based on role)
 export const getUserTickets = async (userId, userRole) => {
   try {
-    let q;
+    let tickets = [];
 
     if (userRole === "admin") {
       // Admin can see all tickets
-      q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
+      const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        tickets.push({ id: doc.id, ...doc.data() });
+      });
     } else if (userRole === "technician") {
-      // Technician can see assigned tickets and unassigned tickets
-      q = query(
+      // Get assigned tickets
+      const assignedQuery = query(
         collection(db, "tickets"),
-        where("assignedTo", "in", [userId, null]),
+        where("assignedTo", "==", userId),
         orderBy("createdAt", "desc")
       );
+      const assignedSnapshot = await getDocs(assignedQuery);
+      
+      // Get unassigned tickets
+      const unassignedQuery = query(
+        collection(db, "tickets"),
+        where("assignedTo", "==", null),
+        orderBy("createdAt", "desc")
+      );
+      const unassignedSnapshot = await getDocs(unassignedQuery);
+
+      // Combine results
+      assignedSnapshot.forEach((doc) => {
+        tickets.push({ id: doc.id, ...doc.data() });
+      });
+      unassignedSnapshot.forEach((doc) => {
+        tickets.push({ id: doc.id, ...doc.data() });
+      });
+
+      // Sort combined results by createdAt
+      tickets.sort((a, b) => b.createdAt - a.createdAt);
     } else {
       // User can only see their own tickets
-      q = query(
+      const q = query(
         collection(db, "tickets"),
         where("createdBy", "==", userId),
         orderBy("createdAt", "desc")
       );
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        tickets.push({ id: doc.id, ...doc.data() });
+      });
     }
-
-    const querySnapshot = await getDocs(q);
-    const tickets = [];
-    querySnapshot.forEach((doc) => {
-      tickets.push({ id: doc.id, ...doc.data() });
-    });
 
     return { success: true, tickets };
   } catch (error) {
@@ -319,6 +341,11 @@ export const createNotification = async (uid, message) => {
 // Get user notifications
 export const getUserNotifications = async (userId) => {
   try {
+    // Validate userId
+    if (!userId) {
+      return { success: false, error: "User ID is required" };
+    }
+
     const q = query(
       collection(db, "notifications"),
       where("uid", "==", userId),
@@ -328,12 +355,26 @@ export const getUserNotifications = async (userId) => {
     const querySnapshot = await getDocs(q);
     const notifications = [];
     querySnapshot.forEach((doc) => {
-      notifications.push({ id: doc.id, ...doc.data() });
+      const data = doc.data();
+      // Ensure we have valid notification data
+      if (data && data.uid && data.message !== undefined) {
+        notifications.push({ id: doc.id, ...data });
+      }
     });
 
     return { success: true, notifications };
   } catch (error) {
     console.error("Error fetching notifications:", error);
+    
+    // Handle specific Firestore errors
+    if (error.code === 'permission-denied') {
+      return { success: false, error: "Permission denied. Please check your authentication." };
+    } else if (error.code === 'unavailable') {
+      return { success: false, error: "Service temporarily unavailable. Please try again." };
+    } else if (error.message.includes('network') || error.message.includes('connection')) {
+      return { success: false, error: "Network connection error. Please check your internet connection." };
+    }
+    
     return { success: false, error: error.message };
   }
 };

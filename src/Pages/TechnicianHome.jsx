@@ -11,14 +11,24 @@ export default function TechnicianHome() {
   const auth = getAuth();
 
   const fetchTickets = async () => {
+    if (!auth.currentUser) {
+      console.warn('No authenticated user found');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await getUserTickets(auth.currentUser.uid, 'technician');
       if (result.success) {
         setTickets(result.tickets);
-      } 
+      } else {
+        console.error('Failed to fetch tickets:', result.error);
+        toast.error('Failed to load tickets. Please try again.');
+      }
     } catch (error) {
       console.error('Error fetching tickets:', error);
+      toast.error('Error loading tickets. Please refresh the page.');
     } finally {
       setLoading(false);
     }

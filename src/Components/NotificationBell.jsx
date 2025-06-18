@@ -10,7 +10,7 @@ export default function NotificationBell() {
   const dropdownRef = useRef(null);
   const auth = getAuth();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (retryCount = 0) => {
     if (!auth.currentUser) return;
 
     setLoading(true);
@@ -18,9 +18,28 @@ export default function NotificationBell() {
       const result = await getUserNotifications(auth.currentUser.uid);
       if (result.success) {
         setNotifications(result.notifications);
+      } else {
+        console.error('Failed to fetch notifications:', result.error);
+        // Don't show toast for every failed attempt to avoid spam
+        if (retryCount === 0) {
+          console.warn('Notification fetch failed, will retry in background');
+        }
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      
+      // Retry logic for connection errors
+      if (retryCount < 2 && (
+        error.message.includes('ERR_QUIC_PROTOCOL_ERROR') ||
+        error.message.includes('network') ||
+        error.message.includes('connection')
+      )) {
+        console.log(`Retrying notification fetch (attempt ${retryCount + 1})`);
+        setTimeout(() => {
+          fetchNotifications(retryCount + 1);
+        }, 2000 * (retryCount + 1)); // Exponential backoff
+        return;
+      }
     } finally {
       setLoading(false);
     }
