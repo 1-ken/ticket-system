@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { getUserNotifications, markNotificationAsRead } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
+import { doc, getDoc, collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
@@ -9,8 +11,151 @@ export default function NotificationBell() {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const auth = getAuth();
+  
+  // Refs for notification sound
+  const audioRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const prevUnreadCountRef = useRef(0);
+  const [userRole, setUserRole] = useState(null);
 
-  const fetchNotifications = async (retryCount = 0) => {
+  // Function to play fallback beep using Web Audio API
+  const playBeep = useCallback((duration = 200) => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const oscillator = audioContextRef.current.createOscillator();
+      const gainNode = audioContextRef.current.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 800;
+      gainNode.gain.value = 0.1;
+      
+      oscillator.start();
+      setTimeout(() => oscillator.stop(), duration);
+    } catch (error) {
+      console.warn('Web Audio API not supported:', error);
+    }
+  }, []);
+
+  // Initialize audio on component mount with absolute path
+  useEffect(() => {
+    const initializeAudio = async () => {
+      try {
+        // Create new Audio object with absolute path
+        const audio = new Audio(`${window.location.origin}/notification-sound.mp3`);
+        
+        // Configure audio element
+        audio.preload = 'auto';
+        
+        // Add error handler
+        audio.onerror = (e) => {
+          console.error('🔊 Audio load error:', e);
+        };
+        
+        // Store in ref
+        audioRef.current = audio;
+        
+        // Pre-load the audio
+        await audio.load();
+        
+        // Test if audio loaded successfully
+        if (audio.readyState >= 2) {
+          console.log('🔊 Audio initialized successfully');
+        } else {
+          console.warn('🔊 Audio not fully loaded');
+        }
+      } catch (error) {
+        console.error('🔊 Failed to initialize audio:', error);
+      }
+    };
+
+    initializeAudio();
+
+    // Cleanup function
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Function to play notification sound with retry logic
+  const playNotificationSound = useCallback(async (duration = 15000) => {
+    console.log('🔊 Attempting to play notification sound...');
+    
+    // First try to use Web Audio API to generate a tone
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      const context = audioContextRef.current;
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(context.destination);
+      
+      // Create a more attention-grabbing sound pattern
+      oscillator.type = 'square';
+      oscillator.frequency.value = 800;
+      gainNode.gain.value = 0.3;
+      
+      // Create a pulsing effect
+      const now = context.currentTime;
+      const pulseInterval = 0.5; // Pulse every 500ms
+      const totalDuration = Math.min(duration / 1000, 15); // Max 15 seconds
+      
+      for (let i = 0; i < totalDuration; i += pulseInterval * 2) {
+        gainNode.gain.setValueAtTime(0.3, now + i);
+        gainNode.gain.setValueAtTime(0, now + i + pulseInterval);
+      }
+      
+      oscillator.start(now);
+      oscillator.stop(now + totalDuration);
+      
+      console.log('🔊 Successfully started playing Web Audio notification sound');
+      return;
+      
+    } catch (webAudioError) {
+      console.warn('🔊 Web Audio API failed, trying MP3 file:', webAudioError);
+      
+      // Fallback to MP3 file with different approach
+      try {
+        // Try without range requests by creating a simple audio element
+        const audio = document.createElement('audio');
+        audio.src = '/notification-sound.mp3';
+        audio.volume = 1.0;
+        audio.preload = 'none'; // Don't preload to avoid range issues
+        
+        // Simple play without waiting for full load
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          await playPromise;
+          console.log('🔊 Successfully started playing MP3 sound');
+          
+          // Stop after duration
+          setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+          }, Math.min(duration, 15000));
+        }
+        
+      } catch (mp3Error) {
+        console.error('🔊 MP3 playback failed:', mp3Error);
+        // Final fallback to simple beep
+        playBeep(Math.min(duration, 2000));
+      }
+    }
+  }, [playBeep]);
+
+  const fetchNotifications = useCallback(async (retryCount = 0) => {
     if (!auth.currentUser) return;
 
     setLoading(true);
@@ -20,7 +165,6 @@ export default function NotificationBell() {
         setNotifications(result.notifications);
       } else {
         console.error('Failed to fetch notifications:', result.error);
-        // Don't show toast for every failed attempt to avoid spam
         if (retryCount === 0) {
           console.warn('Notification fetch failed, will retry in background');
         }
@@ -28,7 +172,6 @@ export default function NotificationBell() {
     } catch (error) {
       console.error('Error fetching notifications:', error);
       
-      // Retry logic for connection errors
       if (retryCount < 2 && (
         error.message.includes('ERR_QUIC_PROTOCOL_ERROR') ||
         error.message.includes('network') ||
@@ -37,23 +180,147 @@ export default function NotificationBell() {
         console.log(`Retrying notification fetch (attempt ${retryCount + 1})`);
         setTimeout(() => {
           fetchNotifications(retryCount + 1);
-        }, 2000 * (retryCount + 1)); // Exponential backoff
+        }, 2000 * (retryCount + 1));
         return;
       }
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-    // Fetch notifications every minute
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
   }, [auth.currentUser]);
 
+  // Memoize functions to prevent unnecessary re-renders and fix dependency warnings
+  const memoizedGetUserRole = useCallback(async () => {
+    if (!auth.currentUser) {
+      console.log('No authenticated user found');
+      return;
+    }
+    try {
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const role = userDoc.data().role;
+        console.log('User role fetched:', role);
+        setUserRole(role);
+      } else {
+        console.warn('User document does not exist');
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      toast.error('Error loading user role');
+    }
+  }, [auth.currentUser]);
+
+  // Effect for authentication and role
   useEffect(() => {
-    // Close dropdown when clicking outside
+    console.log('Auth state changed:', auth.currentUser?.uid);
+    if (auth.currentUser) {
+      memoizedGetUserRole();
+    } else {
+      setUserRole(null);
+    }
+  }, [auth.currentUser, memoizedGetUserRole]);
+
+  // Effect for notifications
+  useEffect(() => {
+    if (!auth.currentUser) {
+      console.log('No authenticated user for notifications');
+      return;
+    }
+
+    console.log('Setting up notification listener for:', auth.currentUser.uid);
+    
+    const q = query(
+      collection(db, 'notifications'),
+      where('uid', '==', auth.currentUser.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const newNotifications = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data && data.uid && data.message !== undefined) {
+          newNotifications.push({ id: doc.id, ...data });
+        }
+      });
+      
+      const newUnreadCount = newNotifications.filter(n => !n.read).length;
+      const previousUnreadCount = prevUnreadCountRef.current;
+      
+      console.log('Notification update:', { 
+        newUnreadCount, 
+        previousUnreadCount, 
+        userRole,
+        hasNewNotifications: newUnreadCount > previousUnreadCount
+      });
+      
+      if (newUnreadCount > previousUnreadCount && userRole) {
+        console.log('🔊 NEW NOTIFICATION DETECTED! Playing sound for role:', userRole);
+        
+        const currentTime = Date.now();
+        const newlyAddedNotifications = newNotifications.filter(notification => {
+          const notificationTime = notification.timestamp?.toDate?.()?.getTime() || currentTime;
+          const isRecent = (currentTime - notificationTime) <= 5000;
+          return isRecent && !notification.read;
+        });
+
+        console.log('🔊 Found new notifications:', newlyAddedNotifications.length);
+        
+        const hasNewTicketNotification = newlyAddedNotifications.some(n => 
+          n.type === 'new_ticket' || 
+          (n.message && n.message.toLowerCase().includes('new ticket created'))
+        );
+        
+        if (userRole === 'technician' && hasNewTicketNotification) {
+          console.log('🔊 TECHNICIAN ALERT: New ticket notification detected');
+          
+          // Try to play the sound multiple times if it fails
+          const maxAttempts = 3;
+          let attempt = 0;
+          const tryPlaySound = async () => {
+            try {
+              await playNotificationSound(15000); // 15 seconds for technicians
+              console.log('🔊 Successfully played notification sound');
+            } catch (error) {
+              attempt++;
+              console.warn(`🔊 Attempt ${attempt} failed:`, error);
+              if (attempt < maxAttempts) {
+                console.log(`🔊 Retrying... (${attempt}/${maxAttempts})`);
+                setTimeout(tryPlaySound, 1000);
+              }
+            }
+          };
+          
+          tryPlaySound();
+          
+          toast.success('🚨 NEW TICKET CREATED - 15 second alert for technician!', {
+            autoClose: 10000,
+            position: "top-center",
+            style: {
+              backgroundColor: '#dc2626',
+              color: 'white',
+              fontWeight: 'bold'
+            }
+          });
+        } else if (userRole !== 'technician') {
+          console.log('🔊 USER ALERT: Playing short beep');
+          playNotificationSound(200); // Short beep for users
+          toast.info('New notification received');
+        }
+      }
+      
+      prevUnreadCountRef.current = newUnreadCount;
+      setNotifications(newNotifications);
+    }, (error) => {
+      console.error('Error in notification listener:', error);
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 2000);
+      return () => clearInterval(interval);
+    });
+
+    return () => unsubscribe();
+  }, [auth.currentUser, userRole, playNotificationSound, fetchNotifications]);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);

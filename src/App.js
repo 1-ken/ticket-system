@@ -14,6 +14,8 @@ import AdminSignUp from "./Pages/AdminSignUp";
 import RoleSelection from "./Pages/RoleSelection";
 import ForgotPassword from "./Pages/ForgotPassword";
 import PrivateRoute from "./Components/PrivateRoute";
+import NotificationTest from "./Components/NotificationTest";
+import DebugNotifications from "./Components/DebugNotifications";
 import "react-toastify/dist/ReactToastify.css";
 
 function App() {
@@ -22,6 +24,7 @@ function App() {
       <Router>
         <Navbar />
         <Routes>
+          <Route path="/" element={<SignIn />} />
           <Route path="/technician-home" element={<TechnicianHome />} />
           <Route path="/user-home" element={<UserHome />} />
           <Route path="/admin-home" element={<AdminHome />} />
@@ -36,6 +39,8 @@ function App() {
           <Route path="/role-selection" element={<RoleSelection />} />
           <Route path="/Knowledge-base" element={<Knowledgebase />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/test-notifications" element={<NotificationTest />} />
+          <Route path="/debug-notifications" element={<DebugNotifications />} />
         </Routes>
       </Router>
       <ToastContainer

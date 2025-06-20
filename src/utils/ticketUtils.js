@@ -45,26 +45,30 @@ export const createTicket = async (ticketData, userId) => {
     // Create the ticket in Firestore
     await setDoc(ticketRef, ticket);
 
+    // Notify technicians about the new ticket (with error handling)
     try {
-      // Then attempt to notify technicians
       const techniciansQuery = query(
         collection(db, "users"),
         where("role", "==", "technician")
       );
 
       const technicianSnapshot = await getDocs(techniciansQuery);
-      const notifyTechnicians = technicianSnapshot.docs.map((doc) =>
+      
+      // Create notifications for each technician using the existing createNotification function
+      const notificationPromises = technicianSnapshot.docs.map((techDoc) =>
         createNotification(
-          doc.id,
-          `New ticket created: ${ticketData.title} (${ticketData.department}, ${ticketData.floor})`
+          techDoc.id,
+          `🎫 NEW TICKET CREATED: ${ticketData.title} (${ticketData.department}, ${ticketData.floor})`,
+          'new_ticket'
         )
       );
 
-      await Promise.all(notifyTechnicians);
+      await Promise.all(notificationPromises);
+      console.log('✅ Successfully created notifications for', technicianSnapshot.docs.length, 'technicians');
     } catch (notificationError) {
-      // If notification creation fails, log it but don't fail the ticket creation
-      console.warn("Failed to create notifications:", notificationError);
-      // The ticket was still created successfully, so we return success
+      // Log the error but don't fail the ticket creation
+      console.warn('⚠️ Failed to create notifications for technicians:', notificationError);
+      // The ticket was still created successfully
     }
 
     return { success: true, ticketId };
@@ -318,7 +322,7 @@ export const addTicketFeedback = async (ticketId, userId, rating, comment) => {
 };
 
 // Create notification
-export const createNotification = async (uid, message) => {
+export const createNotification = async (uid, message, type = null) => {
   try {
     const notificationRef = collection(db, "notifications");
 
@@ -328,9 +332,11 @@ export const createNotification = async (uid, message) => {
       message: message,
       read: false,
       timestamp: serverTimestamp(),
+      type: type
     };
 
-    await addDoc(notificationRef, notification);
+    const docRef = await addDoc(notificationRef, notification);
+    console.log('📬 Created notification:', { uid, type, notificationId: docRef.id });
     return { success: true };
   } catch (error) {
     console.error("Error creating notification:", error);
