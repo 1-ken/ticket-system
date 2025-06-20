@@ -35,6 +35,15 @@ export default function Navbar() {
       navigate("/sign-in");
     }
   };
+
+  const handleNavigation = (path) => {
+    const user = auth.currentUser;
+    if (user) {
+      navigate(path);
+    } else {
+      navigate("/sign-in");
+    }
+  };
   return (
     <div className="bg-[#ffffff] border-b shadow-sm sticky top-0 z-40">
       <header className="flex justify-between items-center px-3 max-w-6xl mx-auto relative">
@@ -90,7 +99,7 @@ export default function Navbar() {
               Dashboard
             </li>
             <li
-              onClick={() => navigate("/tickets")}
+              onClick={() => handleNavigation("/tickets")}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
                 pathMatchRoute("/tickets") && "text-black border-b-black"
               }`}
@@ -98,7 +107,7 @@ export default function Navbar() {
               Tickets
             </li>
             <li
-              onClick={() => navigate("/Knowledge-base")}
+              onClick={() => handleNavigation("/Knowledge-base")}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
                 pathMatchRoute("/Knowledge-base") && "text-black border-b-black"
               }`}
@@ -106,7 +115,7 @@ export default function Navbar() {
               Knowledge Base
             </li>
             <li
-              onClick={() => navigate("/notifications")}
+              onClick={() => handleNavigation("/notifications")}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
                 pathMatchRoute("/notifications") && "text-black border-b-black"
               }`}
@@ -117,7 +126,7 @@ export default function Navbar() {
               <NotificationBell />
             </li>
             <li
-              onClick={() => navigate("/profile")}
+              onClick={() => handleNavigation("/profile")}
               className={`cursor-pointer py-2 md:py-3 font-bold text-base md:text-lg lg:text-xl xl:text-2xl text-[#484744] border-b-[3px] border-b-transparent ${
                 (pathMatchRoute("/profile") || pathMatchRoute("/sign-in")) &&
                 "text-black border-b-black"
@@ -151,7 +160,7 @@ export default function Navbar() {
             </li>
             <li
               onClick={() => {
-                navigate("/tickets");
+                handleNavigation("/tickets");
                 setIsOpen(false);
               }}
               className={`cursor-pointer px-4 py-2 text-lg text-[#484744] hover:bg-gray-100 ${
@@ -162,7 +171,7 @@ export default function Navbar() {
             </li>
             <li
               onClick={() => {
-                navigate("/Knowledge-base");
+                handleNavigation("/Knowledge-base");
                 setIsOpen(false);
               }}
               className={`cursor-pointer px-4 py-2 text-lg text-[#484744] hover:bg-gray-100 ${
@@ -173,7 +182,7 @@ export default function Navbar() {
             </li>
             <li
               onClick={() => {
-                navigate("/notifications");
+                handleNavigation("/notifications");
                 setIsOpen(false);
               }}
               className={`cursor-pointer px-4 py-2 text-lg text-[#484744] hover:bg-gray-100 ${
@@ -187,7 +196,7 @@ export default function Navbar() {
             </li>
             <li
               onClick={() => {
-                navigate("/profile");
+                handleNavigation("/profile");
                 setIsOpen(false);
               }}
               className={`cursor-pointer px-4 py-2 text-lg text-[#484744] hover:bg-gray-100 ${
