@@ -253,7 +253,37 @@ export default function NotificationBell() {
     }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('🔄 Notification snapshot update received');
+      
       const newNotifications = [];
+      let hasNewNotification = false;
+      
+      snapshot.docChanges().forEach((change) => {
+        const data = change.doc.data();
+        console.log('📄 Document change:', { 
+          type: change.type, 
+          id: change.doc.id,
+          data: {
+            message: data.message,
+            type: data.type,
+            timestamp: data.timestamp?.toDate?.()?.toLocaleString()
+          }
+        });
+        
+        if (change.type === 'added' && data.timestamp) {
+          // Check if this is a truly new notification (within last 30 seconds)
+          const notificationTime = data.timestamp.toDate().getTime();
+          const currentTime = Date.now();
+          const isRecent = (currentTime - notificationTime) <= 30000; // 30 seconds
+          
+          if (isRecent) {
+            console.log('🆕 New notification detected:', data.message);
+            hasNewNotification = true;
+          }
+        }
+      });
+      
+      // Get all current notifications
       snapshot.forEach((doc) => {
         const data = doc.data();
         if (data && data.uid && data.message !== undefined) {
@@ -264,52 +294,35 @@ export default function NotificationBell() {
       const newUnreadCount = newNotifications.filter(n => !n.read).length;
       const previousUnreadCount = prevUnreadCountRef.current;
       
-      console.log('Notification update:', { 
-        newUnreadCount, 
-        previousUnreadCount, 
-        userRole,
-        hasNewNotifications: newUnreadCount > previousUnreadCount
+      console.log('📊 Notification counts:', {
+        total: newNotifications.length,
+        unread: newUnreadCount,
+        previous: previousUnreadCount,
+        hasNew: hasNewNotification
       });
       
-      if (newUnreadCount > previousUnreadCount && userRole) {
+      // Trigger sound if there's a new notification
+      if (hasNewNotification && userRole) {
         console.log('🔊 NEW NOTIFICATION DETECTED! Playing sound for role:', userRole);
-        console.log('🔊 Notification counts:', { newUnreadCount, previousUnreadCount });
-        console.log('🔊 All notifications:', newNotifications.map(n => ({
-          id: n.id,
-          type: n.type,
-          message: n.message?.substring(0, 50) + '...',
-          read: n.read,
-          timestamp: n.timestamp?.toDate?.()?.toLocaleString()
-        })));
         
-        const currentTime = Date.now();
-        const newlyAddedNotifications = newNotifications.filter(notification => {
-          const notificationTime = notification.timestamp?.toDate?.()?.getTime() || currentTime;
-          const isRecent = (currentTime - notificationTime) <= 5000;
+        // Filter for new notifications to check type
+        const recentNotifications = newNotifications.filter(notification => {
+          const notificationTime = notification.timestamp?.toDate?.()?.getTime() || Date.now();
+          const currentTime = Date.now();
+          const isRecent = (currentTime - notificationTime) <= 30000;
           const isUnread = !notification.read;
-          const result = isRecent && isUnread;
-          
-          console.log('🔊 Filtering notification:', {
-            id: notification.id,
-            isRecent,
-            isUnread,
-            result,
-            timeDiff: currentTime - notificationTime
-          });
-          
-          return result;
+          return isRecent && isUnread;
         });
 
-        console.log('🔊 Found new notifications:', newlyAddedNotifications.length);
-        console.log('🔊 New notifications details:', newlyAddedNotifications.map(n => ({
+        console.log('🔊 Recent notifications:', recentNotifications.map(n => ({
           id: n.id,
           type: n.type,
           message: n.message,
           timestamp: n.timestamp?.toDate?.()?.toLocaleString()
         })));
         
-        // Check for new ticket notifications first
-        const hasNewTicketNotification = newlyAddedNotifications.some(n => {
+        // Check for new ticket notifications
+        const hasNewTicketNotification = recentNotifications.some(n => {
           console.log('🔍 Checking notification for new ticket:', {
             type: n.type,
             message: n.message,
@@ -331,18 +344,17 @@ export default function NotificationBell() {
           return result;
         });
 
-        // Then check for comment notifications
-        const hasTicketCommentNotification = newlyAddedNotifications.some(n =>
+        // Check for comment notifications
+        const hasTicketCommentNotification = recentNotifications.some(n =>
           n.type === 'ticket_comment' ||
           (n.message && n.message.toLowerCase().includes('commented on ticket'))
         );
         
-        // Log the notification check results
         console.log('Notification check results:', {
           hasNewTicketNotification,
           hasTicketCommentNotification,
           userRole,
-          notificationMessages: newlyAddedNotifications.map(n => n.message)
+          notificationMessages: recentNotifications.map(n => n.message)
         });
         
         if (userRole === 'technician' && (hasNewTicketNotification || hasTicketCommentNotification)) {
@@ -387,6 +399,7 @@ export default function NotificationBell() {
         }
       }
       
+      // Update the previous count and notifications
       prevUnreadCountRef.current = newUnreadCount;
       setNotifications(newNotifications);
     }, (error) => {
