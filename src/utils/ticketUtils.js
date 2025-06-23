@@ -45,29 +45,30 @@ export const createTicket = async (ticketData, userId) => {
     // Create the ticket in Firestore
     await setDoc(ticketRef, ticket);
 
-    // Notify technicians about the new ticket (with error handling)
+    // Create notifications for technicians - simplified approach
     try {
-      const techniciansQuery = query(
-        collection(db, "users"),
-        where("role", "==", "technician")
-      );
-
-      const technicianSnapshot = await getDocs(techniciansQuery);
+      console.log('🔔 Creating notifications for new ticket:', ticketId);
       
-      // Create notifications for each technician using the existing createNotification function
-      const notificationPromises = technicianSnapshot.docs.map((techDoc) =>
-        createNotification(
-          techDoc.id,
-          `🎫 NEW TICKET CREATED: ${ticketData.title} (${ticketData.department}, ${ticketData.floor})`,
-          'new_ticket'
-        )
-      );
+      // Create a broadcast notification that all technicians can see
+      // We'll use a special notification that technicians can query for
+      const broadcastNotificationRef = collection(db, "notifications");
+      const broadcastNotification = {
+        notificationId: `BROADCAST_${Date.now()}`,
+        uid: 'technicians', // Special uid for technician broadcasts
+        message: `🎫 NEW TICKET CREATED: ${ticketData.title} (${ticketData.department}, Floor ${ticketData.floor})`,
+        read: false,
+        timestamp: serverTimestamp(),
+        type: 'new_ticket',
+        ticketId: ticketId,
+        broadcast: true // Flag to indicate this is a broadcast notification
+      };
 
-      await Promise.all(notificationPromises);
-      console.log('✅ Successfully created notifications for', technicianSnapshot.docs.length, 'technicians');
+      await addDoc(broadcastNotificationRef, broadcastNotification);
+      console.log('✅ Created broadcast notification for technicians');
+      
     } catch (notificationError) {
       // Log the error but don't fail the ticket creation
-      console.warn('⚠️ Failed to create notifications for technicians:', notificationError);
+      console.error('⚠️ Failed to create notifications for technicians:', notificationError);
       // The ticket was still created successfully
     }
 
@@ -324,6 +325,18 @@ export const addTicketFeedback = async (ticketId, userId, rating, comment) => {
 // Create notification
 export const createNotification = async (uid, message, type = null) => {
   try {
+    console.log('📬 Creating notification:', { uid, message, type });
+    
+    if (!uid) {
+      console.error('❌ Cannot create notification: uid is required');
+      return { success: false, error: 'User ID is required' };
+    }
+    
+    if (!message) {
+      console.error('❌ Cannot create notification: message is required');
+      return { success: false, error: 'Message is required' };
+    }
+
     const notificationRef = collection(db, "notifications");
 
     const notification = {
@@ -336,10 +349,15 @@ export const createNotification = async (uid, message, type = null) => {
     };
 
     const docRef = await addDoc(notificationRef, notification);
-    console.log('📬 Created notification:', { uid, type, notificationId: docRef.id });
-    return { success: true };
+    console.log('✅ Successfully created notification:', { 
+      uid, 
+      type, 
+      message: message.substring(0, 50) + '...', 
+      docId: docRef.id 
+    });
+    return { success: true, docId: docRef.id };
   } catch (error) {
-    console.error("Error creating notification:", error);
+    console.error("❌ Error creating notification:", error);
     return { success: false, error: error.message };
   }
 };

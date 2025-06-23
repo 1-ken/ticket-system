@@ -4,6 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import { doc, getDoc, collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import technicianNotificationSound from './technician_notification.mp4';
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
@@ -16,6 +17,7 @@ export default function NotificationBell() {
   const audioRef = useRef(null);
   const audioContextRef = useRef(null);
   const prevUnreadCountRef = useRef(0);
+  const videoRef = useRef(null);
   const [userRole, setUserRole] = useState(null);
 
   // Function to play fallback beep using Web Audio API
@@ -85,10 +87,51 @@ export default function NotificationBell() {
   }, []);
 
   // Function to play notification sound with retry logic
-  const playNotificationSound = useCallback(async (duration = 15000) => {
-    console.log('🔊 Attempting to play notification sound...');
+  const playNotificationSound = useCallback(async (duration = 15000, isTechnician = false) => {
+    console.log('🔊 Attempting to play notification sound...', {
+      duration,
+      isTechnician,
+      hasVideoRef: !!videoRef.current,
+      videoSrc: videoRef.current?.src
+    });
     
-    // First try to use Web Audio API to generate a tone
+    if (isTechnician) {
+      try {
+        if (videoRef.current) {
+          videoRef.current.volume = 1.0;
+          videoRef.current.currentTime = 0;
+          console.log('🔊 Video element state:', {
+            readyState: videoRef.current.readyState,
+            paused: videoRef.current.paused,
+            volume: videoRef.current.volume,
+            src: videoRef.current.src,
+            error: videoRef.current.error
+          });
+          
+          const playPromise = videoRef.current.play();
+          
+          if (playPromise !== undefined) {
+            await playPromise;
+            console.log('🔊 Successfully started playing technician MP4 sound');
+            setTimeout(() => {
+              if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+              }
+            }, Math.min(duration, 15000));
+          }
+        } else {
+          console.warn('🔊 Video ref not available, playing beep fallback');
+          playBeep(Math.min(duration, 2000));
+        }
+      } catch (error) {
+        console.error('🔊 Technician notification playback failed:', error);
+        playBeep(Math.min(duration, 2000));
+      }
+      return;
+    }
+    
+    // For non-technician notifications, use the original sound
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -101,57 +144,20 @@ export default function NotificationBell() {
       oscillator.connect(gainNode);
       gainNode.connect(context.destination);
       
-      // Create a more attention-grabbing sound pattern
       oscillator.type = 'square';
       oscillator.frequency.value = 800;
       gainNode.gain.value = 0.3;
       
-      // Create a pulsing effect
       const now = context.currentTime;
-      const pulseInterval = 0.5; // Pulse every 500ms
-      const totalDuration = Math.min(duration / 1000, 15); // Max 15 seconds
-      
-      for (let i = 0; i < totalDuration; i += pulseInterval * 2) {
-        gainNode.gain.setValueAtTime(0.3, now + i);
-        gainNode.gain.setValueAtTime(0, now + i + pulseInterval);
-      }
-      
       oscillator.start(now);
-      oscillator.stop(now + totalDuration);
+      oscillator.stop(now + (duration / 1000));
       
-      console.log('🔊 Successfully started playing Web Audio notification sound');
+      console.log('🔊 Successfully started playing regular notification sound');
       return;
       
-    } catch (webAudioError) {
-      console.warn('🔊 Web Audio API failed, trying MP3 file:', webAudioError);
-      
-      // Fallback to MP3 file with different approach
-      try {
-        // Try without range requests by creating a simple audio element
-        const audio = document.createElement('audio');
-        audio.src = '/notification-sound.mp3';
-        audio.volume = 1.0;
-        audio.preload = 'none'; // Don't preload to avoid range issues
-        
-        // Simple play without waiting for full load
-        const playPromise = audio.play();
-        
-        if (playPromise !== undefined) {
-          await playPromise;
-          console.log('🔊 Successfully started playing MP3 sound');
-          
-          // Stop after duration
-          setTimeout(() => {
-            audio.pause();
-            audio.currentTime = 0;
-          }, Math.min(duration, 15000));
-        }
-        
-      } catch (mp3Error) {
-        console.error('🔊 MP3 playback failed:', mp3Error);
-        // Final fallback to simple beep
-        playBeep(Math.min(duration, 2000));
-      }
+    } catch (error) {
+      console.warn('🔊 Regular notification sound failed:', error);
+      playBeep(200); // Short beep for regular notifications
     }
   }, [playBeep]);
 
@@ -228,11 +234,23 @@ export default function NotificationBell() {
 
     console.log('Setting up notification listener for:', auth.currentUser.uid);
     
-    const q = query(
-      collection(db, 'notifications'),
-      where('uid', '==', auth.currentUser.uid),
-      orderBy('timestamp', 'desc')
-    );
+    // Create query based on user role
+    let q;
+    if (userRole === 'technician') {
+      // Technicians see both their personal notifications and broadcast notifications
+      q = query(
+        collection(db, 'notifications'),
+        where('uid', 'in', [auth.currentUser.uid, 'technicians']),
+        orderBy('timestamp', 'desc')
+      );
+    } else {
+      // Regular users only see their personal notifications
+      q = query(
+        collection(db, 'notifications'),
+        where('uid', '==', auth.currentUser.uid),
+        orderBy('timestamp', 'desc')
+      );
+    }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const newNotifications = [];
@@ -255,44 +273,105 @@ export default function NotificationBell() {
       
       if (newUnreadCount > previousUnreadCount && userRole) {
         console.log('🔊 NEW NOTIFICATION DETECTED! Playing sound for role:', userRole);
+        console.log('🔊 Notification counts:', { newUnreadCount, previousUnreadCount });
+        console.log('🔊 All notifications:', newNotifications.map(n => ({
+          id: n.id,
+          type: n.type,
+          message: n.message?.substring(0, 50) + '...',
+          read: n.read,
+          timestamp: n.timestamp?.toDate?.()?.toLocaleString()
+        })));
         
         const currentTime = Date.now();
         const newlyAddedNotifications = newNotifications.filter(notification => {
           const notificationTime = notification.timestamp?.toDate?.()?.getTime() || currentTime;
           const isRecent = (currentTime - notificationTime) <= 5000;
-          return isRecent && !notification.read;
+          const isUnread = !notification.read;
+          const result = isRecent && isUnread;
+          
+          console.log('🔊 Filtering notification:', {
+            id: notification.id,
+            isRecent,
+            isUnread,
+            result,
+            timeDiff: currentTime - notificationTime
+          });
+          
+          return result;
         });
 
         console.log('🔊 Found new notifications:', newlyAddedNotifications.length);
+        console.log('🔊 New notifications details:', newlyAddedNotifications.map(n => ({
+          id: n.id,
+          type: n.type,
+          message: n.message,
+          timestamp: n.timestamp?.toDate?.()?.toLocaleString()
+        })));
         
-        const hasNewTicketNotification = newlyAddedNotifications.some(n => 
-          n.type === 'new_ticket' || 
-          (n.message && n.message.toLowerCase().includes('new ticket created'))
+        // Check for new ticket notifications first
+        const hasNewTicketNotification = newlyAddedNotifications.some(n => {
+          console.log('🔍 Checking notification for new ticket:', {
+            type: n.type,
+            message: n.message,
+            timestamp: n.timestamp?.toDate?.()?.toLocaleString()
+          });
+          
+          const isNewTicketType = n.type === 'new_ticket';
+          const hasNewTicketMessage = n.message && (
+            n.message.toLowerCase().includes('new ticket created') ||
+            n.message.toLowerCase().includes('ticket created') ||
+            n.message.toLowerCase().includes('created a ticket') ||
+            n.message.includes('🎫 NEW TICKET CREATED') ||
+            n.message.includes('NEW TICKET CREATED')
+          );
+          
+          const result = isNewTicketType || hasNewTicketMessage;
+          console.log('🔍 New ticket check result:', { isNewTicketType, hasNewTicketMessage, result });
+          
+          return result;
+        });
+
+        // Then check for comment notifications
+        const hasTicketCommentNotification = newlyAddedNotifications.some(n =>
+          n.type === 'ticket_comment' ||
+          (n.message && n.message.toLowerCase().includes('commented on ticket'))
         );
         
-        if (userRole === 'technician' && hasNewTicketNotification) {
-          console.log('🔊 TECHNICIAN ALERT: New ticket notification detected');
+        // Log the notification check results
+        console.log('Notification check results:', {
+          hasNewTicketNotification,
+          hasTicketCommentNotification,
+          userRole,
+          notificationMessages: newlyAddedNotifications.map(n => n.message)
+        });
+        
+        if (userRole === 'technician' && (hasNewTicketNotification || hasTicketCommentNotification)) {
+          const notificationType = hasNewTicketNotification ? 'New ticket created' : 'New comment on ticket';
+          console.log('🔊 TECHNICIAN ALERT:', notificationType);
           
-          // Try to play the sound multiple times if it fails
-          const maxAttempts = 3;
-          let attempt = 0;
-          const tryPlaySound = async () => {
+          // Play sound for technician notifications
+          console.log('🔊 Playing technician notification sound...');
+          const playSound = async () => {
             try {
-              await playNotificationSound(15000); // 15 seconds for technicians
-              console.log('🔊 Successfully played notification sound');
+              await playNotificationSound(15000, true); // 15 seconds for technicians
+              console.log('🔊 Successfully played technician notification sound');
             } catch (error) {
-              attempt++;
-              console.warn(`🔊 Attempt ${attempt} failed:`, error);
-              if (attempt < maxAttempts) {
-                console.log(`🔊 Retrying... (${attempt}/${maxAttempts})`);
-                setTimeout(tryPlaySound, 1000);
-              }
+              console.error('🔊 Failed to play notification sound:', error);
+              // Retry once after a short delay
+              setTimeout(async () => {
+                try {
+                  await playNotificationSound(15000, true);
+                } catch (retryError) {
+                  console.error('🔊 Retry failed:', retryError);
+                }
+              }, 1000);
             }
           };
           
-          tryPlaySound();
+          playSound();
           
-          toast.success('🚨 NEW TICKET CREATED - 15 second alert for technician!', {
+          // Show appropriate toast message
+          toast.success(`🚨 ${notificationType.toUpperCase()} - 15 second alert for technician!`, {
             autoClose: 10000,
             position: "top-center",
             style: {
@@ -415,6 +494,13 @@ export default function NotificationBell() {
           </div>
         </div>
       )}
+      {/* Hidden video element for technician notifications */}
+      <video
+        ref={videoRef}
+        src={technicianNotificationSound}
+        preload="metadata"
+        style={{ display: 'none' }}
+      />
     </div>
   );
 }

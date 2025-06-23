@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { toast } from 'react-toastify';
+import technicianNotificationSound from './technician_notification.mp4';
 
 export default function NotificationTest() {
   const [userRole, setUserRole] = useState('user');
   const audioRef = useRef(null);
-  const prolongedSoundRef = useRef(null);
+  const videoRef = useRef(null);
   const audioContextRef = useRef(null);
 
   // Function to play fallback beep using Web Audio API
@@ -35,14 +36,34 @@ export default function NotificationTest() {
 
   // Function to play prolonged sound for technicians
   const playProlongedSound = () => {
-    if (prolongedSoundRef.current) {
-      prolongedSoundRef.current.play().then(() => {
-        toast.success('Playing 15-second sound for technician');
-      }).catch((e) => {
-        console.warn('Prolonged audio play prevented, using Web Audio API:', e);
+    try {
+      if (videoRef.current) {
+        videoRef.current.volume = 1.0;
+        videoRef.current.currentTime = 0;
+        const playPromise = videoRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            toast.success('Playing 15-second technician MP4 sound');
+            
+            // Stop after 15 seconds
+            setTimeout(() => {
+              if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+              }
+            }, 15000);
+          }).catch((e) => {
+            console.warn('Technician MP4 play prevented, using Web Audio API:', e);
+            playBeep(15000); // 15 seconds beep
+          });
+        }
+      } else {
+        console.warn('Video ref not available, using beep fallback');
         playBeep(15000); // 15 seconds beep
-      });
-    } else {
+      }
+    } catch (error) {
+      console.error('Failed to play technician notification MP4:', error);
       playBeep(15000); // 15 seconds beep
     }
   };
@@ -93,24 +114,12 @@ export default function NotificationTest() {
         preload="auto"
       />
 
-      {/* Prolonged sound for technicians */}
-      <audio
-        ref={prolongedSoundRef}
-        src="/notification-sound.mp3"
-        preload="auto"
-        loop
-        onLoadedData={() => {
-          if (prolongedSoundRef.current) {
-            prolongedSoundRef.current.addEventListener('play', () => {
-              setTimeout(() => {
-                if (prolongedSoundRef.current && !prolongedSoundRef.current.paused) {
-                  prolongedSoundRef.current.pause();
-                  prolongedSoundRef.current.currentTime = 0;
-                }
-              }, 15000); // Stop after 15 seconds
-            });
-          }
-        }}
+      {/* Hidden video element for technician notifications */}
+      <video
+        ref={videoRef}
+        src={technicianNotificationSound}
+        preload="metadata"
+        style={{ display: 'none' }}
       />
 
       <div className="mb-4">
