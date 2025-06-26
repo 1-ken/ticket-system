@@ -38,7 +38,15 @@ const UserManagementDemo = () => {
   };
 
   const handleResetPassword = (userId) => {
-    alert('Password reset functionality would be implemented here. User will be prompted to change password on next login.');
+    const user = users.find(u => u.id === userId);
+    // Actually update the user's password in the data
+    const updatedUsers = users.map(u => 
+      u.id === userId 
+        ? { ...u, password: 'empower-it-123' }
+        : u
+    );
+    setUsers(updatedUsers);
+    alert(`Password has been reset to "empower-it-123" for ${user.fullName} (${user.email})`);
   };
 
   const handleDeactivateUser = (userId) => {
@@ -48,6 +56,33 @@ const UserManagementDemo = () => {
         : user
     );
     setUsers(updatedUsers);
+  };
+
+  const handleAddUser = () => {
+    setSelectedUser(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveUser = (userData) => {
+    if (userData.id) {
+      // Update existing user
+      const updatedUsers = users.map(user => 
+        user.id === userData.id ? userData : user
+      );
+      setUsers(updatedUsers);
+      alert(`User ${userData.fullName} has been updated successfully!`);
+    } else {
+      // Add new user with default password
+      const newUser = {
+        ...userData,
+        id: Math.max(...users.map(u => u.id)) + 1,
+        status: 'Active',
+        password: 'empower-it-123' // Set default password for new users
+      };
+      setUsers([...users, newUser]);
+      alert(`User ${userData.fullName} has been added successfully with default password "empower-it-123"`);
+    }
+    setIsModalOpen(false);
   };
 
   return (
@@ -175,6 +210,7 @@ const UserManagementDemo = () => {
               setSearchQuery={setSearchQuery}
               roleFilter={roleFilter}
               setRoleFilter={setRoleFilter}
+              onAddUser={handleAddUser}
             />
 
             {/* User Table */}
@@ -200,6 +236,7 @@ const UserManagementDemo = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         user={selectedUser}
+        onSave={handleSaveUser}
       />
     </div>
   );

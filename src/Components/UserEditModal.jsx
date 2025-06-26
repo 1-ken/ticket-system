@@ -18,8 +18,17 @@ const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
         department: user.department || '',
         status: user.status || ''
       });
+    } else {
+      // Reset form for new user
+      setFormData({
+        fullName: '',
+        email: '',
+        role: '',
+        department: '',
+        status: 'Active'
+      });
     }
-  }, [user]);
+  }, [user, isOpen]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,16 +41,18 @@ const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSave) {
-      onSave({
-        ...user,
-        fullName: formData.fullName,
-        email: formData.email,
-        role: formData.role,
-        department: formData.department,
-        status: formData.status
-      });
+      const userData = {
+        ...formData
+      };
+      
+      // If editing existing user, include the ID
+      if (user && user.id) {
+        userData.id = user.id;
+      }
+      
+      onSave(userData);
     } else {
-      console.log('Updated user data:', formData);
+      console.log('User data:', formData);
       onClose();
     }
   };
@@ -161,7 +172,7 @@ const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
                 type="submit"
                 className="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
-                Save Changes
+                {user ? 'Save Changes' : 'Add User'}
               </button>
             </div>
           </form>

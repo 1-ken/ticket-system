@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import UserTable from '../Components/UserTable';
 import UserEditModal from '../Components/UserEditModal';
@@ -53,24 +53,52 @@ const UserManagementFirebase = () => {
     setIsModalOpen(true);
   };
 
-  const handleUpdateUser = async (updatedUser) => {
+  const handleUpdateUser = async (userData) => {
     try {
-      const userRef = doc(db, 'users', updatedUser.id);
-      await updateDoc(userRef, {
-        name: updatedUser.fullName,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        department: updatedUser.department,
-        status: updatedUser.status
-      });
+      if (userData.id) {
+        // Update existing user
+        const userRef = doc(db, 'users', userData.id);
+        await updateDoc(userRef, {
+          name: userData.fullName,
+          email: userData.email,
+          role: userData.role,
+          department: userData.department,
+          status: userData.status
+        });
 
-      // Update local state
-      setUsers(users.map(user => 
-        user.id === updatedUser.id ? updatedUser : user
-      ));
+        // Update local state
+        setUsers(users.map(user => 
+          user.id === userData.id ? userData : user
+        ));
+        alert(`User ${userData.fullName} has been updated successfully!`);
+      } else {
+        // Add new user with default password
+        const docRef = await addDoc(collection(db, 'users'), {
+          name: userData.fullName,
+          email: userData.email,
+          role: userData.role,
+          department: userData.department,
+          status: userData.status || 'Active',
+          password: 'empower-it-123' // Set default password for new users
+        });
+
+        // Add to local state
+        const newUser = {
+          id: docRef.id,
+          fullName: userData.fullName,
+          email: userData.email,
+          role: userData.role,
+          department: userData.department,
+          status: userData.status || 'Active',
+          password: 'empower-it-123'
+        };
+        setUsers([...users, newUser]);
+        alert(`User ${userData.fullName} has been added successfully with default password "empower-it-123"`);
+      }
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('Error saving user:', error);
+      alert('Failed to save user. Please try again.');
     }
   };
 
@@ -96,14 +124,30 @@ const UserManagementFirebase = () => {
   const handleResetPassword = async (userId) => {
     try {
       const userRef = doc(db, 'users', userId);
+      const user = users.find(u => u.id === userId);
+      
       await updateDoc(userRef, {
+        password: 'empower-it-123',
         passwordResetRequired: true
       });
-      alert('Password reset flag has been set. User will be prompted to change password on next login.');
+      
+      // Update local state
+      setUsers(users.map(u => 
+        u.id === userId 
+          ? { ...u, password: 'empower-it-123' }
+          : u
+      ));
+      
+      alert(`Password has been reset to "empower-it-123" for ${user.fullName} (${user.email})`);
     } catch (error) {
       console.error('Error resetting password:', error);
       alert('Failed to reset password. Please try again.');
     }
+  };
+
+  const handleAddUser = () => {
+    setSelectedUser(null);
+    setIsModalOpen(true);
   };
 
   if (loading) {
@@ -248,6 +292,7 @@ const UserManagementFirebase = () => {
               setSearchQuery={setSearchQuery}
               roleFilter={roleFilter}
               setRoleFilter={setRoleFilter}
+              onAddUser={handleAddUser}
             />
 
             {/* User Table */}
