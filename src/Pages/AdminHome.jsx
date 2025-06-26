@@ -5,6 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import Ticket from '../Components/Ticket';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminHome() {
   const [tickets, setTickets] = useState([]);
@@ -13,6 +14,7 @@ export default function AdminHome() {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'tickets', 'users'
   const [filter, setFilter] = useState('all'); // 'all', 'open', 'in-progress', 'resolved', 'closed'
   const auth = getAuth();
+  const navigate = useNavigate();
 
   const fetchTickets = async () => {
     try {
@@ -260,7 +262,18 @@ export default function AdminHome() {
       {/* Users Tab */}
       {activeTab === 'users' && (
         <div>
-          <h2 className="text-2xl font-bold mb-6">User Management</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">User Management</h2>
+            <button
+              onClick={() => navigate('/admin/user-management')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+            >
+              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Advanced User Management
+            </button>
+          </div>
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
