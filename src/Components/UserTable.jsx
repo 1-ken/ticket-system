@@ -1,6 +1,6 @@
 import React from 'react';
 
-const UserTable = ({ users, onEdit }) => {
+const UserTable = ({ users, onEdit, onDeactivate, onResetPassword }) => {
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -60,13 +60,16 @@ const UserTable = ({ users, onEdit }) => {
                   >
                     Edit
                   </button>
-                  <button className="text-blue-600 hover:text-blue-900">
-                    Change Role
-                  </button>
-                  <button className="text-red-600 hover:text-red-900">
+                  <button 
+                    onClick={() => onDeactivate && onDeactivate(user.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
                     {user.status === 'Active' ? 'Deactivate' : 'Activate'}
                   </button>
-                  <button className="text-gray-600 hover:text-gray-900">
+                  <button 
+                    onClick={() => onResetPassword && onResetPassword(user.id)}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
                     Reset Password
                   </button>
                 </td>

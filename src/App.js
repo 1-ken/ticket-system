@@ -4,7 +4,7 @@ import Knowledgebase from "./Pages/Knowledgebase";
 import TechnicianHome from "./Pages/TechnicianHome";
 import UserHome from "./Pages/UserHome";
 import AdminHome from "./Pages/AdminHome";
-import UserManagementDashboard from "./Pages/UserManagementDashboard";
+import UserManagementFirebase from "./Pages/UserManagementFirebase";
 import UserManagementDemo from "./Pages/UserManagementDemo";
 import Profile from "./Pages/Profile";
 import Notifications from "./Pages/Notifications";
@@ -31,7 +31,7 @@ function App() {
           <Route path="/user-home" element={<UserHome />} />
           <Route path="/admin-home" element={<AdminHome />} />
           <Route path="/admin/user-management" element={<PrivateRoute />}>
-            <Route index element={<UserManagementDashboard />} />
+            <Route index element={<UserManagementFirebase />} />
           </Route>
           <Route path="/demo/user-management" element={<UserManagementDemo />} />
           <Route path="/profile" element={<PrivateRoute />}>

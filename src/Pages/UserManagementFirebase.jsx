@@ -1,34 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { db } from '../firebase';
 import UserTable from '../Components/UserTable';
 import UserEditModal from '../Components/UserEditModal';
 import TableFilter from '../Components/TableFilter';
 
-const UserManagementDemo = () => {
+const UserManagementFirebase = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Enhanced mock data for demonstration
-  const [users, setUsers] = useState([
-    { id: 1, fullName: 'John Doe', email: 'john.doe@company.com', role: 'Admin', department: 'IT', status: 'Active' },
-    { id: 2, fullName: 'Jane Smith', email: 'jane.smith@company.com', role: 'Technician', department: 'Support', status: 'Active' },
-    { id: 3, fullName: 'Mike Johnson', email: 'mike.johnson@company.com', role: 'User', department: 'Sales', status: 'Active' },
-    { id: 4, fullName: 'Sarah Wilson', email: 'sarah.wilson@company.com', role: 'Technician', department: 'IT', status: 'Inactive' },
-    { id: 5, fullName: 'David Brown', email: 'david.brown@company.com', role: 'User', department: 'Marketing', status: 'Active' },
-    { id: 6, fullName: 'Lisa Davis', email: 'lisa.davis@company.com', role: 'Admin', department: 'HR', status: 'Active' },
-    { id: 7, fullName: 'Tom Anderson', email: 'tom.anderson@company.com', role: 'User', department: 'Finance', status: 'Active' },
-    { id: 8, fullName: 'Emily Taylor', email: 'emily.taylor@company.com', role: 'Technician', department: 'Support', status: 'Active' },
-    { id: 9, fullName: 'Robert Garcia', email: 'robert.garcia@company.com', role: 'User', department: 'Operations', status: 'Active' },
-    { id: 10, fullName: 'Maria Rodriguez', email: 'maria.rodriguez@company.com', role: 'Technician', department: 'IT', status: 'Inactive' },
-  ]);
+  // Fetch users from Firebase
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const usersRef = collection(db, 'users');
+        const snapshot = await getDocs(usersRef);
+        const usersList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          fullName: doc.data().name || doc.data().fullName || 'Unknown',
+          email: doc.data().email || '',
+          role: doc.data().role || 'User',
+          department: doc.data().department || 'General',
+          status: doc.data().status || 'Active'
+        }));
+        setUsers(usersList);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   // Filter users based on search and role filter
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.department.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesSearch = 
+      (user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       user.department?.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesRole = roleFilter === 'all' || user.role?.toLowerCase() === roleFilter.toLowerCase();
     return matchesSearch && matchesRole;
   });
 
@@ -37,18 +53,69 @@ const UserManagementDemo = () => {
     setIsModalOpen(true);
   };
 
-  const handleResetPassword = (userId) => {
-    alert('Password reset functionality would be implemented here. User will be prompted to change password on next login.');
+  const handleUpdateUser = async (updatedUser) => {
+    try {
+      const userRef = doc(db, 'users', updatedUser.id);
+      await updateDoc(userRef, {
+        name: updatedUser.fullName,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        department: updatedUser.department,
+        status: updatedUser.status
+      });
+
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === updatedUser.id ? updatedUser : user
+      ));
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
   };
 
-  const handleDeactivateUser = (userId) => {
-    const updatedUsers = users.map(user => 
-      user.id === userId 
-        ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' }
-        : user
-    );
-    setUsers(updatedUsers);
+  const handleDeactivateUser = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const user = users.find(u => u.id === userId);
+      const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
+      
+      await updateDoc(userRef, {
+        status: newStatus
+      });
+
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, status: newStatus } : user
+      ));
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    }
   };
+
+  const handleResetPassword = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        passwordResetRequired: true
+      });
+      alert('Password reset flag has been set. User will be prompted to change password on next login.');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('Failed to reset password. Please try again.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading users from Firebase...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -82,7 +149,7 @@ const UserManagementDemo = () => {
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900">User Management Dashboard</h1>
               <p className="mt-2 text-sm text-gray-600">
-                Manage users, roles, and permissions across your IT ticketing system
+                Manage users, roles, and permissions across your IT ticketing system (Firebase Data)
               </p>
             </div>
 
@@ -121,7 +188,9 @@ const UserManagementDemo = () => {
                     <div className="ml-5 w-0 flex-1">
                       <dl>
                         <dt className="text-sm font-medium text-gray-500 truncate">Active Users</dt>
-                        <dd className="text-lg font-medium text-gray-900">{users.filter(u => u.status === 'Active').length}</dd>
+                        <dd className="text-lg font-medium text-gray-900">
+                          {users.filter(u => u.status === 'Active').length}
+                        </dd>
                       </dl>
                     </div>
                   </div>
@@ -141,7 +210,9 @@ const UserManagementDemo = () => {
                     <div className="ml-5 w-0 flex-1">
                       <dl>
                         <dt className="text-sm font-medium text-gray-500 truncate">Technicians</dt>
-                        <dd className="text-lg font-medium text-gray-900">{users.filter(u => u.role === 'Technician').length}</dd>
+                        <dd className="text-lg font-medium text-gray-900">
+                          {users.filter(u => u.role?.toLowerCase() === 'technician').length}
+                        </dd>
                       </dl>
                     </div>
                   </div>
@@ -161,7 +232,9 @@ const UserManagementDemo = () => {
                     <div className="ml-5 w-0 flex-1">
                       <dl>
                         <dt className="text-sm font-medium text-gray-500 truncate">Admins</dt>
-                        <dd className="text-lg font-medium text-gray-900">{users.filter(u => u.role === 'Admin').length}</dd>
+                        <dd className="text-lg font-medium text-gray-900">
+                          {users.filter(u => u.role?.toLowerCase() === 'admin').length}
+                        </dd>
                       </dl>
                     </div>
                   </div>
@@ -200,9 +273,10 @@ const UserManagementDemo = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         user={selectedUser}
+        onSave={handleUpdateUser}
       />
     </div>
   );
 };
 
-export default UserManagementDemo;
+export default UserManagementFirebase;

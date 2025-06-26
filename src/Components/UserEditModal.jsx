@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const UserEditModal = ({ isOpen, onClose, user }) => {
+const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -31,9 +31,19 @@ const UserEditModal = ({ isOpen, onClose, user }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Updated user data:', formData);
-    onClose();
+    if (onSave) {
+      onSave({
+        ...user,
+        fullName: formData.fullName,
+        email: formData.email,
+        role: formData.role,
+        department: formData.department,
+        status: formData.status
+      });
+    } else {
+      console.log('Updated user data:', formData);
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
