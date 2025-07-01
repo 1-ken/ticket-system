@@ -64,6 +64,7 @@ export default function TechnicianHome() {
   }
 
   return (
+
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-8 mb-8">

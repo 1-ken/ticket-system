@@ -1,6 +1,7 @@
 import Navbar from "./Components/Navbar";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Knowledgebase from "./Pages/Knowledgebase";
+
+import KnowledgeBase from "./Pages/KnowledgeBase";
 import TechnicianHome from "./Pages/TechnicianHome";
 import UserHome from "./Pages/UserHome";
 import AdminHome from "./Pages/AdminHome";
@@ -15,6 +16,7 @@ import SignUp from "./Pages/SignUp";
 import AdminSignUp from "./Pages/AdminSignUp";
 import RoleSelection from "./Pages/RoleSelection";
 import ForgotPassword from "./Pages/ForgotPassword";
+
 import PrivateRoute from "./Components/PrivateRoute";
 import NotificationTest from "./Components/NotificationTest";
 import DebugNotifications from "./Components/DebugNotifications";
@@ -43,7 +45,7 @@ function App() {
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/admin-signup" element={<AdminSignUp />} />
           <Route path="/role-selection" element={<RoleSelection />} />
-          <Route path="/Knowledge-base" element={<Knowledgebase />} />
+          <Route path="/Knowledge-base" element={<KnowledgeBase />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/test-notifications" element={<NotificationTest />} />
           <Route path="/debug-notifications" element={<DebugNotifications />} />

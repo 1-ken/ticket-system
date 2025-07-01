@@ -177,7 +177,6 @@ export default function NotificationBell() {
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      
       if (retryCount < 2 && (
         error.message.includes('ERR_QUIC_PROTOCOL_ERROR') ||
         error.message.includes('network') ||
