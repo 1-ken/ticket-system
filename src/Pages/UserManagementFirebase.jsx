@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import UserTable from '../Components/UserTable';
-import UserEditModal from '../Components/UserEditModal';
 import TableFilter from '../Components/TableFilter';
 
 const UserManagementFirebase = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [users, setUsers] = useState([]);
@@ -49,57 +46,8 @@ const UserManagementFirebase = () => {
   });
 
   const handleEditUser = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
-  };
-
-  const handleUpdateUser = async (userData) => {
-    try {
-      if (userData.id) {
-        // Update existing user
-        const userRef = doc(db, 'users', userData.id);
-        await updateDoc(userRef, {
-          name: userData.fullName,
-          email: userData.email,
-          role: userData.role,
-          department: userData.department,
-          status: userData.status
-        });
-
-        // Update local state
-        setUsers(users.map(user => 
-          user.id === userData.id ? userData : user
-        ));
-        alert(`User ${userData.fullName} has been updated successfully!`);
-      } else {
-        // Add new user with default password
-        const docRef = await addDoc(collection(db, 'users'), {
-          name: userData.fullName,
-          email: userData.email,
-          role: userData.role,
-          department: userData.department,
-          status: userData.status || 'Active',
-          password: 'empower-it-123' // Set default password for new users
-        });
-
-        // Add to local state
-        const newUser = {
-          id: docRef.id,
-          fullName: userData.fullName,
-          email: userData.email,
-          role: userData.role,
-          department: userData.department,
-          status: userData.status || 'Active',
-          password: 'empower-it-123'
-        };
-        setUsers([...users, newUser]);
-        alert(`User ${userData.fullName} has been added successfully with default password "empower-it-123"`);
-      }
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error saving user:', error);
-      alert('Failed to save user. Please try again.');
-    }
+    // Edit functionality removed as it was tied to the modal
+    console.log('Edit user functionality has been removed');
   };
 
   const handleDeactivateUser = async (userId) => {
@@ -119,35 +67,6 @@ const UserManagementFirebase = () => {
     } catch (error) {
       console.error('Error updating user status:', error);
     }
-  };
-
-  const handleResetPassword = async (userId) => {
-    try {
-      const userRef = doc(db, 'users', userId);
-      const user = users.find(u => u.id === userId);
-      
-      await updateDoc(userRef, {
-        password: 'empower-it-123',
-        passwordResetRequired: true
-      });
-      
-      // Update local state
-      setUsers(users.map(u => 
-        u.id === userId 
-          ? { ...u, password: 'empower-it-123' }
-          : u
-      ));
-      
-      alert(`Password has been reset to "empower-it-123" for ${user.fullName} (${user.email})`);
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      alert('Failed to reset password. Please try again.');
-    }
-  };
-
-  const handleAddUser = () => {
-    setSelectedUser(null);
-    setIsModalOpen(true);
   };
 
   if (loading) {
@@ -292,7 +211,6 @@ const UserManagementFirebase = () => {
               setSearchQuery={setSearchQuery}
               roleFilter={roleFilter}
               setRoleFilter={setRoleFilter}
-              onAddUser={handleAddUser}
             />
 
             {/* User Table */}
@@ -301,7 +219,6 @@ const UserManagementFirebase = () => {
                 users={filteredUsers}
                 onEdit={handleEditUser}
                 onDeactivate={handleDeactivateUser}
-                onResetPassword={handleResetPassword}
               />
             </div>
 
@@ -312,14 +229,6 @@ const UserManagementFirebase = () => {
           </div>
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <UserEditModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        user={selectedUser}
-        onSave={handleUpdateUser}
-      />
     </div>
   );
 };
