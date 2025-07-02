@@ -5,7 +5,6 @@ import CreateTicket from '../Components/CreateTicket';
 import Ticket from '../Components/Ticket';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
 
 export default function UserHome() {
   const [tickets, setTickets] = useState([]);

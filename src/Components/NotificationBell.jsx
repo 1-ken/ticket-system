@@ -381,20 +381,31 @@ export default function NotificationBell() {
           
           playSound();
           
-          // Show appropriate toast message
-          toast.success(`🚨 ${notificationType.toUpperCase()} - 15 second alert for technician!`, {
-            autoClose: 10000,
-            position: "top-center",
-            style: {
-              backgroundColor: '#dc2626',
-              color: 'white',
-              fontWeight: 'bold'
-            }
-          });
+          // Show appropriate toast message only once per notification batch
+          const toastId = `technician-alert-${Date.now()}`;
+          if (!toast.isActive(toastId)) {
+            toast.success(`🚨 ${notificationType.toUpperCase()} - 15 second alert for technician!`, {
+              toastId: toastId,
+              autoClose: 10000,
+              position: "top-center",
+              style: {
+                backgroundColor: '#dc2626',
+                color: 'white',
+                fontWeight: 'bold'
+              }
+            });
+          }
         } else if (userRole !== 'technician') {
           console.log('🔊 USER ALERT: Playing short beep');
           playNotificationSound(200); // Short beep for users
-          toast.info('New notification received');
+          
+          // Show toast only once per notification batch for users
+          const toastId = `user-alert-${Date.now()}`;
+          if (!toast.isActive(toastId)) {
+            toast.info('New notification received', {
+              toastId: toastId
+            });
+          }
         }
       }
       
