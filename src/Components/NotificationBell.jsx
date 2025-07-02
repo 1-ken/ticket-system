@@ -19,6 +19,7 @@ export default function NotificationBell() {
   const prevUnreadCountRef = useRef(0);
   const videoRef = useRef(null);
   const [userRole, setUserRole] = useState(null);
+  const lastToastIdRef = useRef(null);
 
   // Function to play fallback beep using Web Audio API
   const playBeep = useCallback((duration = 200) => {
@@ -381,20 +382,43 @@ export default function NotificationBell() {
           
           playSound();
           
-          // Show appropriate toast message
-          toast.success(`🚨 ${notificationType.toUpperCase()} - 15 second alert for technician!`, {
-            autoClose: 10000,
-            position: "top-center",
-            style: {
-              backgroundColor: '#dc2626',
-              color: 'white',
-              fontWeight: 'bold'
-            }
-          });
+          // Generate stable toast ID based on notification content
+          const notificationContent = recentNotifications
+            .map(n => `${n.type}-${n.message}`)
+            .join('-');
+          const toastId = `technician-alert-${notificationContent}`;
+          
+          // Only show toast if it's different from the last one
+          if (toastId !== lastToastIdRef.current) {
+            lastToastIdRef.current = toastId;
+            toast.success(`🚨 ${notificationType.toUpperCase()} - 15 second alert for technician!`, {
+              toastId,
+              autoClose: 10000,
+              position: "top-center",
+              style: {
+                backgroundColor: '#dc2626',
+                color: 'white',
+                fontWeight: 'bold'
+              }
+            });
+          }
         } else if (userRole !== 'technician') {
           console.log('🔊 USER ALERT: Playing short beep');
           playNotificationSound(200); // Short beep for users
-          toast.info('New notification received');
+          
+          // Generate stable toast ID for user notifications
+          const notificationContent = recentNotifications
+            .map(n => `${n.type}-${n.message}`)
+            .join('-');
+          const toastId = `user-alert-${notificationContent}`;
+          
+          // Only show toast if it's different from the last one
+          if (toastId !== lastToastIdRef.current) {
+            lastToastIdRef.current = toastId;
+            toast.info('New notification received', {
+              toastId
+            });
+          }
         }
       }
       
@@ -419,7 +443,11 @@ export default function NotificationBell() {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      // Reset the last toast ID when component unmounts
+      lastToastIdRef.current = null;
+    };
   }, []);
 
   const handleMarkAsRead = async (notificationId) => {

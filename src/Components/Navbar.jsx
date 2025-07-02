@@ -55,7 +55,11 @@ export default function Navbar() {
             alt="logo"
             className="h-10 sm:h-12 md:h-16 lg:h-20 xl:h-24 2xl:h-28 cursor-pointer rounded-full"
           /> */}
-          <FcCustomerSupport size={100} />
+          <FcCustomerSupport 
+            size={100} 
+            onClick={handleDashboardClick}
+            className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
+          />
         </div>
         {/* Mobile menu button */}
         <button

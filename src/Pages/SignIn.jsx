@@ -27,7 +27,7 @@ export default function Signin() {
       const auth = getAuth();
       const userCredentials = await signInWithEmailAndPassword(auth, email, password);
       if (userCredentials.user) {
-        navigate("/");
+        await navigateBasedOnRole(userCredentials.user, navigate);
       }
     } catch (error) {
       toast.error("wrong user credentials");
