@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserTickets } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import Ticket from '../Components/Ticket';
@@ -10,7 +10,7 @@ export default function TechnicianHome() {
   const [filter, setFilter] = useState('all'); // 'all', 'assigned', 'unassigned'
   const auth = getAuth();
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     if (!auth.currentUser) {
       console.warn('No authenticated user found');
       setLoading(false);
@@ -32,13 +32,13 @@ export default function TechnicianHome() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth.currentUser]);
 
   useEffect(() => {
     if (auth.currentUser) {
       fetchTickets();
     }
-  }, [auth.currentUser]);
+  }, [auth.currentUser, fetchTickets]);
 
   const handleTicketUpdated = () => {
     fetchTickets();

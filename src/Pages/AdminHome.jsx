@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserTickets } from '../utils/ticketUtils';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import Ticket from '../Components/Ticket';
@@ -16,7 +16,7 @@ export default function AdminHome() {
   const auth = getAuth();
   const navigate = useNavigate();
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       const result = await getUserTickets(auth.currentUser.uid, 'admin');
       if (result.success) {
@@ -28,7 +28,7 @@ export default function AdminHome() {
       console.error('Error fetching tickets:', error);
       toast.error('Error loading tickets');
     }
-  };
+  }, [auth.currentUser]);
 
   const fetchUsers = async () => {
     try {
@@ -54,7 +54,7 @@ export default function AdminHome() {
       setLoading(false);
     };
     fetchData();
-  }, [auth.currentUser]);
+  }, [auth.currentUser, fetchTickets]);
 
   const handleTicketUpdated = () => {
     fetchTickets();

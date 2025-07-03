@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserTickets } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import CreateTicket from '../Components/CreateTicket';
@@ -12,7 +12,7 @@ export default function UserHome() {
   const [showCreateTicket, setShowCreateTicket] = useState(false);
   const auth = getAuth();
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getUserTickets(auth.currentUser.uid, 'user');
@@ -27,13 +27,13 @@ export default function UserHome() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth.currentUser]);
 
   useEffect(() => {
     if (auth.currentUser) {
       fetchTickets();
     }
-  }, [auth.currentUser]);
+  }, [auth.currentUser, fetchTickets]);
 
   const handleTicketCreated = () => {
     fetchTickets();

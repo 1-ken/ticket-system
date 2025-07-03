@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserNotifications, markNotificationAsRead } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
@@ -9,7 +9,7 @@ export default function Notifications() {
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
   const auth = getAuth();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getUserNotifications(auth.currentUser.uid);
@@ -24,13 +24,13 @@ export default function Notifications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth.currentUser]);
 
   useEffect(() => {
     if (auth.currentUser) {
       fetchNotifications();
     }
-  }, [auth.currentUser]);
+  }, [auth.currentUser, fetchNotifications]);
 
   const handleMarkAsRead = async (notificationId) => {
     try {

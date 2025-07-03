@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserTickets } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -27,7 +27,7 @@ export default function TicketList() {
     }
   };
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
       const role = await fetchUserRole(auth.currentUser.uid);
@@ -43,13 +43,13 @@ export default function TicketList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth.currentUser]);
 
   useEffect(() => {
     if (auth.currentUser) {
       fetchTickets();
     }
-  }, [auth.currentUser]);
+  }, [auth.currentUser, fetchTickets]);
 
   const handleTicketCreated = () => {
     fetchTickets();
