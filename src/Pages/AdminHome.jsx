@@ -4,6 +4,9 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import Ticket from '../Components/Ticket';
+import TicketAnalytics from '../Components/TicketAnalytics';
+import TechnicianPanel from '../Components/TechnicianPanel';
+import ReportsSection from '../Components/ReportsSection';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,7 +14,7 @@ export default function AdminHome() {
   const [tickets, setTickets] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'tickets', 'users'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'tickets', 'users', 'analytics', 'technicians', 'reports'
   const [filter, setFilter] = useState('all'); // 'all', 'open', 'in-progress', 'resolved', 'closed'
   const auth = getAuth();
   const navigate = useNavigate();
@@ -98,7 +101,6 @@ export default function AdminHome() {
   const userStats = getUserStats();
 
   return (
-
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg p-8 mb-8">
@@ -109,10 +111,10 @@ export default function AdminHome() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex space-x-1 mb-8">
+      <div className="flex flex-wrap gap-1 mb-8">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeTab === 'overview'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'overview'
             ? 'bg-red-500 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
@@ -120,22 +122,49 @@ export default function AdminHome() {
           Overview
         </button>
         <button
-          onClick={() => setActiveTab('tickets')}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeTab === 'tickets'
+          onClick={() => setActiveTab('analytics')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'analytics'
             ? 'bg-red-500 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
         >
-          All Tickets
+          Analytics
+        </button>
+        <button
+          onClick={() => setActiveTab('tickets')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'tickets'
+            ? 'bg-red-500 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+        >
+          Ticket Management
+        </button>
+        <button
+          onClick={() => setActiveTab('technicians')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'technicians'
+            ? 'bg-red-500 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+        >
+          Technician Panel
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors ${activeTab === 'users'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'users'
             ? 'bg-red-500 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
         >
           User Management
+        </button>
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'reports'
+            ? 'bg-red-500 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+        >
+          Reports
         </button>
       </div>
 
@@ -191,14 +220,47 @@ export default function AdminHome() {
               </div>
             </div>
           </div>
+
+          {/* Quick Actions */}
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className="bg-blue-500 text-white p-6 rounded-lg hover:bg-blue-600 transition-colors text-left"
+              >
+                <h3 className="text-lg font-semibold mb-2">View Analytics</h3>
+                <p className="text-blue-100">Detailed charts and insights</p>
+              </button>
+              <button
+                onClick={() => setActiveTab('technicians')}
+                className="bg-green-500 text-white p-6 rounded-lg hover:bg-green-600 transition-colors text-left"
+              >
+                <h3 className="text-lg font-semibold mb-2">Manage Assignments</h3>
+                <p className="text-green-100">Assign tickets to technicians</p>
+              </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className="bg-purple-500 text-white p-6 rounded-lg hover:bg-purple-600 transition-colors text-left"
+              >
+                <h3 className="text-lg font-semibold mb-2">Generate Reports</h3>
+                <p className="text-purple-100">Comprehensive analytics reports</p>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Tickets Tab */}
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <TicketAnalytics tickets={tickets} users={users} />
+      )}
+
+      {/* Ticket Management Tab */}
       {activeTab === 'tickets' && (
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">All Support Tickets</h2>
+            <h2 className="text-2xl font-bold">Ticket Management</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => setFilter('all')}
@@ -239,6 +301,51 @@ export default function AdminHome() {
             </div>
           </div>
 
+          {/* Enhanced Ticket Filters */}
+          <div className="bg-white rounded-lg shadow p-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                  <option value="">All Priorities</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Technician</label>
+                <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                  <option value="">All Technicians</option>
+                  <option value="unassigned">Unassigned</option>
+                  {users.filter(u => u.role === 'technician').map(tech => (
+                    <option key={tech.id} value={tech.id}>
+                      {tech.name || tech.fullName || tech.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                  <option value="">All Departments</option>
+                  <option value="IT">IT</option>
+                  <option value="HR">HR</option>
+                  <option value="Finance">Finance</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input
+                  type="text"
+                  placeholder="Search tickets..."
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-4">
             {filteredTickets().length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow">
@@ -258,6 +365,15 @@ export default function AdminHome() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Technician Assignment Panel */}
+      {activeTab === 'technicians' && (
+        <TechnicianPanel 
+          tickets={tickets} 
+          users={users} 
+          onUpdate={handleTicketUpdated}
+        />
       )}
 
       {/* Users Tab */}
@@ -319,6 +435,11 @@ export default function AdminHome() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Reports Tab */}
+      {activeTab === 'reports' && (
+        <ReportsSection tickets={tickets} users={users} />
       )}
     </div>
   );
