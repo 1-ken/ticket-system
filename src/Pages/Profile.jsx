@@ -8,7 +8,9 @@ import {
   updateDoc,
   getDoc,
 } from "firebase/firestore";
-import ReactLoading from "react-loading"
+import ReactLoading from "react-loading";
+import { FcCustomerSupport } from "react-icons/fc";
+import NotificationBell from "../Components/NotificationBell";
 function Profile() {
   const auth = getAuth();
   const navigate = useNavigate();
@@ -29,10 +31,18 @@ function Profile() {
 
           if (docSnap.exists()) {
             const userData = docSnap.data();
+            const userRole = userData.role || "user";
+            
+            // If user is admin, redirect to admin-home with profile tab
+            if (userRole === 'admin') {
+              navigate('/admin-home', { state: { activeTab: 'profile' } });
+              return;
+            }
+            
             setFormData({
               name: user.displayName || userData.name || "",
               email: user.email || "",
-              role: userData.role || "user", // Default to "user" if no role found
+              role: userRole,
             });
           } else {
             // If no Firestore document exists, use auth data
@@ -108,7 +118,97 @@ function Profile() {
 
   return (
     <>
-      <section className="max-w-6xl mx-auto flex justify-center items-center flex-col">
+      {/* Admin Navigation - Show only for admin users */}
+      {role === 'admin' && (
+        <div className="fixed top-0 left-0 right-0 bg-white shadow-md z-50 border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <FcCustomerSupport 
+                  size={60} 
+                  onClick={() => navigate('/admin-home')}
+                  className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                />
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    onClick={() => {
+                      navigate('/admin-home');
+                      // You can add state or URL params here to set the active tab to 'overview'
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/admin-home');
+                      // You can add state or URL params here to set the active tab to 'analytics'
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  >
+                    Analytics
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/admin-home');
+                      // You can add state or URL params here to set the active tab to 'tickets'
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  >
+                    Ticket Management
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/admin-home');
+                      // You can add state or URL params here to set the active tab to 'technicians'
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  >
+                    Technician Panel
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/admin-home');
+                      // You can add state or URL params here to set the active tab to 'users'
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  >
+                    User Management
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/admin-home');
+                      // You can add state or URL params here to set the active tab to 'reports'
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  >
+                    Reports
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <NotificationBell />
+                <button
+                  className="px-4 py-2 rounded-lg font-medium transition-colors bg-red-500 text-white"
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={() => auth.signOut()}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <section className={`max-w-6xl mx-auto flex justify-center items-center flex-col ${role === 'admin' ? 'pt-24' : ''}`}>
         <h1 className="text-3xl  text-center mt-6 font-bold ">My Profile</h1>
         <div className="w-full md:w-[50%] mt-6 px-3">
           <form>
