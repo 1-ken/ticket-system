@@ -416,3 +416,91 @@ export const markNotificationAsRead = async (notificationId) => {
     return { success: false, error: error.message };
   }
 };
+
+// Update user role
+export const updateUserRole = async (userId, newRole) => {
+  try {
+    const userRef = doc(db, "users", userId);
+    await updateDoc(userRef, {
+      role: newRole,
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Deactivate user account
+export const deactivateUserAccount = async (userId) => {
+  try {
+    const userRef = doc(db, "users", userId);
+    await updateDoc(userRef, {
+      status: 'inactive',
+      deactivatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error deactivating user account:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Bulk assign tickets
+export const bulkAssignTickets = async (ticketIds, technicianId) => {
+  try {
+    const promises = ticketIds.map(ticketId => 
+      assignTicket(ticketId, technicianId)
+    );
+    
+    const results = await Promise.all(promises);
+    const successCount = results.filter(r => r.success).length;
+    
+    return { 
+      success: true, 
+      message: `${successCount} tickets assigned successfully` 
+    };
+  } catch (error) {
+    console.error("Error bulk assigning tickets:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Get ticket history
+export const getTicketHistory = async (ticketId) => {
+  try {
+    const historyRef = collection(db, "tickets", ticketId, "history");
+    const q = query(historyRef, orderBy("timestamp", "desc"));
+    const querySnapshot = await getDocs(q);
+
+    const history = [];
+    querySnapshot.forEach((doc) => {
+      history.push({ id: doc.id, ...doc.data() });
+    });
+
+    return { success: true, history };
+  } catch (error) {
+    console.error("Error fetching ticket history:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Add ticket history entry
+export const addTicketHistory = async (ticketId, action, details, userId) => {
+  try {
+    const historyRef = collection(db, "tickets", ticketId, "history");
+    const historyEntry = {
+      action,
+      details,
+      userId,
+      timestamp: serverTimestamp(),
+    };
+
+    await addDoc(historyRef, historyEntry);
+    return { success: true };
+  } catch (error) {
+    console.error("Error adding ticket history:", error);
+    return { success: false, error: error.message };
+  }
+};
