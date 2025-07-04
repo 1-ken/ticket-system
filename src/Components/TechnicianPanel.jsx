@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { getTechnicianWorkload, getUnassignedTickets } from '../utils/analyticsUtils';
+import { getTechnicianWorkload } from '../utils/analyticsUtils';
 import { assignTicket } from '../utils/ticketUtils';
 import { toast } from 'react-toastify';
 
@@ -19,15 +17,17 @@ const TechnicianPanel = ({ tickets, users, onUpdate }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [unassigned, workload] = await Promise.all([
-        getUnassignedTickets(),
-        getTechnicianWorkload(users)
-      ]);
-      
+      // Get unassigned tickets from existing tickets data (more reliable)
+      const unassigned = tickets.filter(ticket => 
+        !ticket.assignedTo && ticket.status !== 'Closed'
+      );
       setUnassignedTickets(unassigned);
+
+      // Calculate workload using existing tickets data
+      const workload = getTechnicianWorkload(tickets, users);
       setTechnicianWorkload(workload);
     } catch (error) {
-      console.error('Error fetching technician panel data:', error);
+      console.error('Error processing technician panel data:', error);
       toast.error('Failed to load technician data');
     } finally {
       setLoading(false);

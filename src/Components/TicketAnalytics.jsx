@@ -43,7 +43,7 @@ const TicketAnalytics = ({ tickets, users }) => {
   useEffect(() => {
     if (tickets && users) {
       // Calculate all analytics data
-      const calculateAnalytics = async () => {
+      const calculateAnalytics = () => {
         // Priority distribution
         const priorityStats = getTicketsByPriority(tickets);
         setPriorityData({
@@ -66,7 +66,7 @@ const TicketAnalytics = ({ tickets, users }) => {
         });
 
         // Technician performance
-        const techStats = await getTicketsResolvedPerTechnician(tickets, users);
+        const techStats = getTicketsResolvedPerTechnician(tickets, users);
         setTechnicianData({
           labels: techStats.map(tech => tech.name),
           datasets: [{

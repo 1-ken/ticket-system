@@ -29,31 +29,32 @@ export const getTicketsByPriority = (tickets) => {
 };
 
 // Get tickets resolved per technician
-export const getTicketsResolvedPerTechnician = async (tickets, users) => {
+export const getTicketsResolvedPerTechnician = (tickets, users) => {
+  // Get all technicians first
+  const technicians = users.filter(user => user.role === 'technician');
+  
+  // Initialize stats for all technicians
+  const technicianStats = {};
+  technicians.forEach(tech => {
+    technicianStats[tech.id] = {
+      count: 0,
+      name: tech.name || tech.fullName || tech.email || 'Unknown Technician'
+    };
+  });
+
+  // Count resolved tickets for each technician
   const resolvedTickets = tickets.filter(ticket => 
     ticket.status === 'Resolved' && ticket.assignedTo
   );
 
-  const technicianStats = {};
-  
   resolvedTickets.forEach(ticket => {
     const techId = ticket.assignedTo;
-    if (!technicianStats[techId]) {
-      technicianStats[techId] = {
-        count: 0,
-        name: 'Unknown'
-      };
-    }
-    technicianStats[techId].count++;
-  });
-
-  // Map technician IDs to names
-  users.forEach(user => {
-    if (technicianStats[user.id] && user.role === 'technician') {
-      technicianStats[user.id].name = user.name || user.fullName || user.email;
+    if (technicianStats[techId]) {
+      technicianStats[techId].count++;
     }
   });
 
+  // Convert to array format for charts
   return Object.entries(technicianStats).map(([id, data]) => ({
     technicianId: id,
     name: data.name,
@@ -114,28 +115,24 @@ export const getTicketTrends = (tickets) => {
 };
 
 // Get technician workload
-export const getTechnicianWorkload = async (users) => {
+export const getTechnicianWorkload = (tickets, users) => {
   try {
     const technicians = users.filter(user => user.role === 'technician');
     const workloadData = [];
 
-    for (const technician of technicians) {
-      // Get open tickets assigned to this technician
-      const openTicketsQuery = query(
-        collection(db, 'tickets'),
-        where('assignedTo', '==', technician.id),
-        where('status', 'in', ['Open', 'In Progress'])
-      );
-      
-      const openTicketsSnapshot = await getDocs(openTicketsQuery);
-      const openTicketsCount = openTicketsSnapshot.size;
+    technicians.forEach(technician => {
+      // Count open tickets assigned to this technician from the existing tickets data
+      const openTicketsCount = tickets.filter(ticket => 
+        ticket.assignedTo === technician.id && 
+        (ticket.status === 'Open' || ticket.status === 'In Progress')
+      ).length;
 
       workloadData.push({
         technicianId: technician.id,
-        name: technician.name || technician.fullName || technician.email,
+        name: technician.name || technician.fullName || technician.email || 'Unknown Technician',
         openTickets: openTicketsCount
       });
-    }
+    });
 
     return workloadData;
   } catch (error) {
@@ -144,25 +141,9 @@ export const getTechnicianWorkload = async (users) => {
   }
 };
 
-// Get unassigned tickets
-export const getUnassignedTickets = async () => {
-  try {
-    const unassignedQuery = query(
-      collection(db, 'tickets'),
-      where('assignedTo', '==', null),
-      where('status', '!=', 'Closed')
-    );
-    
-    const snapshot = await getDocs(unassignedQuery);
-    const tickets = [];
-    
-    snapshot.forEach(doc => {
-      tickets.push({ id: doc.id, ...doc.data() });
-    });
-
-    return tickets;
-  } catch (error) {
-    console.error('Error getting unassigned tickets:', error);
-    return [];
-  }
+// Get unassigned tickets from existing data
+export const getUnassignedTickets = (tickets) => {
+  return tickets.filter(ticket => 
+    !ticket.assignedTo && ticket.status !== 'Closed'
+  );
 };
