@@ -302,7 +302,7 @@ export default function AdminHome() {
                 Profile
               </button>
               <button
-                onClick={() => auth.signOut()}
+                onClick={handleSignOut}
                 className="px-4 py-2 rounded-lg font-medium transition-colors bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
