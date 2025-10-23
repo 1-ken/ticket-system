@@ -2,15 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { getUserTickets } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import Ticket from '../Components/Ticket';
+import TestErrorButton from '../Components/TestErrorButton';
 import { toast } from 'react-toastify';
+import Honeybadger from "@honeybadger-io/js";
 
 export default function TechnicianHome() {
+  // Only notify once on mount for testing; avoid calling on every render
+  React.useEffect(() => {
+    if (Honeybadger && typeof Honeybadger.notify === 'function') {
+      Honeybadger.notify("Testing Honeybadger from TechnicianHome!");
+    }
+  }, []);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'assigned', 'unassigned'
   const auth = getAuth();
 
-  const fetchTickets = async () => {
+  const fetchTickets = React.useCallback(async () => {
     if (!auth.currentUser) {
       console.warn('No authenticated user found');
       setLoading(false);
@@ -32,13 +40,13 @@ export default function TechnicianHome() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth.currentUser]);
 
   useEffect(() => {
     if (auth.currentUser) {
       fetchTickets();
     }
-  }, [auth.currentUser]);
+  }, [auth.currentUser, fetchTickets]);
 
   const handleTicketUpdated = () => {
     fetchTickets();
@@ -68,10 +76,15 @@ export default function TechnicianHome() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-8 mb-8">
-        <h1 className="text-3xl font-bold mb-2">Technician Dashboard</h1>
-        <p className="text-lg opacity-90">
-          Manage and resolve support tickets
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Technician Dashboard</h1>
+            <p className="text-lg opacity-90">Manage and resolve support tickets</p>
+          </div>
+          <div className="ml-4">
+            <TestErrorButton />
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats */}
