@@ -7,16 +7,25 @@ import reportWebVitals from "./reportWebVitals";
 // 🐞 Import Honeybadger
 import { Honeybadger, HoneybadgerErrorBoundary } from "@honeybadger-io/react";
 
-// 🧠 Configure Honeybadger
-// Use env var in production/development. Create-React-App exposes env vars
-// prefixed with REACT_APP_. This falls back to the existing key if not set.
+// 🧠 Configure Honeybadger for production
+// Read configuration from environment variables. In Create React App,
+// client-side env vars must be prefixed with REACT_APP_.
+const apiKey = process.env.REACT_APP_HONEYBADGER_API_KEY;
+const environment = process.env.REACT_APP_HONEYBADGER_ENV || process.env.NODE_ENV || 'production';
+
+// Fail-fast in production: require an API key so we don't silently run without
+// proper configuration.
+if (environment === 'production' && !apiKey) {
+  // Throwing here will prevent the app from starting in production and
+  // force the deploy to set the correct secret.
+  throw new Error('Missing REACT_APP_HONEYBADGER_API_KEY environment variable. Set this for production builds.');
+}
+
 const config = {
-  apiKey: process.env.REACT_APP_HONEYBADGER_API_KEY || "hbp_Sy48yI0xwMwFrOdxxFg2ZRc4Tsn8KK0vThd0",
-  environment: "production",
+  apiKey: apiKey || undefined,
+  environment,
 };
 
-// Configure Honeybadger in-place. `configure` mutates the Honeybadger module;
-// call it and then use the Honeybadger module itself for the ErrorBoundary
 Honeybadger.configure(config);
 const honeybadger = Honeybadger;
 

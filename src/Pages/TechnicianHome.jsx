@@ -2,17 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { getUserTickets } from '../utils/ticketUtils';
 import { getAuth } from 'firebase/auth';
 import Ticket from '../Components/Ticket';
-import TestErrorButton from '../Components/TestErrorButton';
 import { toast } from 'react-toastify';
-import Honeybadger from "@honeybadger-io/js";
 
 export default function TechnicianHome() {
-  // Only notify once on mount for testing; avoid calling on every render
-  React.useEffect(() => {
-    if (Honeybadger && typeof Honeybadger.notify === 'function') {
-      Honeybadger.notify("Testing Honeybadger from TechnicianHome!");
-    }
-  }, []);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'assigned', 'unassigned'
@@ -81,9 +73,7 @@ export default function TechnicianHome() {
             <h1 className="text-3xl font-bold mb-2">Technician Dashboard</h1>
             <p className="text-lg opacity-90">Manage and resolve support tickets</p>
           </div>
-          <div className="ml-4">
-            <TestErrorButton />
-          </div>
+          <div className="ml-4">{/* removed test UI for production */}</div>
         </div>
       </div>
 
